@@ -98,10 +98,109 @@
             </div>
         </div>
     </main>
+    <div id="leaveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Request Leave</h3>
+                <button onclick="toggleModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <form id="leaveForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+                    <select id="leaveType" onchange="checkRules()" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="annual">Annual Leave (ลาพักผ่อน)</option>
+                        <option value="sick">Sick Leave (ลาป่วย)</option>
+                        <option value="personal">Personal Leave (ลากิจส่วนตัว)</option>
+                        <option value="ordination">Ordination Leave (ลาอุปสมบท)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="startDate" onchange="calculateDays()" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="endDate" onchange="calculateDays()" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" rows="3" placeholder="Reason for leave..." class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none"></textarea>
+                </div>
+
+                <div id="attachmentSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attachments (Required)</label>
+                    <div class="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:bg-gray-50 transition cursor-pointer">
+                        <i data-lucide="upload-cloud" class="mx-auto text-gray-400 mb-2"></i>
+                        <p class="text-xs text-gray-500">Click to upload or drag and drop</p>
+                        <input type="file" class="hidden" id="fileInput">
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="toggleModal()" class="flex-1 px-4 py-3 border rounded-xl text-gray-600 font-semibold hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 shadow-lg shadow-blue-200">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         // Initialize Lucide Icons
         lucide.createIcons();
+
+        function checkRules() {
+            const type = document.getElementById('leaveType').value;
+            const attachment = document.getElementById('attachmentSection');
+            const startDate = new document.getElementById('startDate').value;
+            
+            // กฎการลาป่วย: หากลาเกิน 3 วันต้องแนบใบรับรองแพทย์ 
+            // (ส่วนนี้จะเช็คละเอียดขึ้นใน calculateDays)
+            
+            // กฎการลากิจ: ต้องแนบเอกสารทุกครั้ง 
+            if (type === 'personal' || type === 'ordination') {
+                attachment.classList.remove('hidden');
+            } else {
+                attachment.classList.add('hidden');
+            }
+        }
+
+        function calculateDays() {
+            const start = new Date(document.getElementById('startDate').value);
+            const end = new Date(document.getElementById('endDate').value);
+            const type = document.getElementById('leaveType').value;
+            const today = new Date();
+
+            if (start && end && end >= start) {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                // เช็คกฎลาป่วย > 3 วัน 
+                if (type === 'sick' && diffDays > 3) {
+                    document.getElementById('attachmentSection').classList.remove('hidden');
+                    alert("ลาป่วยเกิน 3 วัน กรุณาแนบใบรับรองแพทย์ ");
+                }
+
+                // เช็คการลาล่วงหน้า: ลากิจ 3 วัน , ลาพักผ่อน 7 วัน 
+                const leadTime = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+                if (type === 'personal' && leadTime < 3) {
+                    alert("ลากิจส่วนตัวต้องแจ้งล่วงหน้าอย่างน้อย 3 วัน ");
+                } else if (type === 'annual' && leadTime < 7) {
+                    alert("ลาพักผ่อนต้องแจ้งล่วงหน้าอย่างน้อย 7 วัน ");
+                }
+            }
+        }
+
+        function toggleModal() {
+            const modal = document.getElementById('leaveModal');
+            modal.classList.toggle('hidden');
+        }
     </script>
 </body>
 </html>

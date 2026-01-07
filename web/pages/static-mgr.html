@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics (Manager) - Leave System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900">
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                        <i data-lucide="line-chart"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">Manager Name</h1>
+                        <p class="text-sm text-gray-500 italic">หัวหน้างาน - IT Department</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-8 mt-2 overflow-x-auto">
+                <a href="dashboard-mgr.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="my-request.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>My Request</span>
+                </a>
+                <a href="#" class="border-b-2 border-blue-600 px-1 py-4 text-blue-600 font-medium flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                    <span>Static</span>
+                </a>
+                <a href="teams-mgr.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="users-2" class="w-4 h-4"></i>
+                    <span>Teams</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        
+        <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+            <h3 class="text-xl font-bold mb-6 text-gray-800">Leave Type Static</h3>
+            <div class="h-[400px]">
+                <canvas id="leaveTypeChart"></canvas>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+            <h3 class="text-xl font-bold mb-6 text-gray-800">Leave Day Static</h3>
+            <p class="text-sm text-gray-400 mb-4">กราฟการลาตามช่วงเวลา (วันจันทร์ - วันศุกร์)</p>
+            <div class="h-[400px]">
+                <canvas id="leaveDayChart"></canvas>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+            <h3 class="text-xl font-bold mb-6 text-gray-800 text-center">Decision Static</h3>
+            <div class="h-[350px] flex justify-center">
+                <canvas id="decisionChart"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // 1. Bar Chart: สรุปจำนวนการลาแยกตามประเภท
+        const ctx1 = document.getElementById('leaveTypeChart');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['ลาป่วย', 'ลากิจ', 'ลาพักร้อน', 'ไม่ได้รับค่าตอบแทน', 'ลาบวช'],
+                datasets: [{
+                    label: 'Leave Count',
+                    data: [1, 13, 2, 6, 12],
+                    backgroundColor: '#1E6091',
+                    borderRadius: 8,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { drawBorder: false } } }
+            }
+        });
+
+        // 2. Line Chart: แนวโน้มการลาในแต่ละวันของสัปดาห์
+        const ctx2 = document.getElementById('leaveDayChart');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'],
+                datasets: [{
+                    label: 'จำนวนคนลา',
+                    data: [20, 12, 10, 6, 22],
+                    borderColor: '#1E6091',
+                    backgroundColor: 'rgba(30, 96, 145, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#1E6091'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // 3. Pie Chart: สัดส่วนการอนุมัติ
+        const ctx3 = document.getElementById('decisionChart');
+        new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: ['Approve', 'Reject'],
+                datasets: [{
+                    data: [55, 45],
+                    backgroundColor: ['#1E6091', '#F17135'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                }
+            }
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
