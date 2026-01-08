@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests - Leave System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900">
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">สมชาย ใจดี</h1>
+                        <p class="text-sm text-gray-500 italic">พนักงาน - IT Support</p>
+                    </div>
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center space-x-2 transition shadow-lg shadow-blue-200">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    <span>New Request</span>
+                </button>
+            </div>
+            <div class="flex space-x-8 mt-2">
+                <a href="dashboard-emp.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="border-b-2 border-blue-600 px-1 py-4 text-blue-600 font-medium flex items-center space-x-2">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>My Request</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">My Leave Request (n)</h2>
+            <div class="flex space-x-2">
+                <select class="bg-white border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>All Status</option>
+                    <option>Approved</option>
+                    <option>Pending</option>
+                    <option>Rejected</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="request-list">
+            </div>
+    </main>
+
+    <script src="../data/mock-data.js"></script>
+    <script>
+        function renderRequests() {
+            const listContainer = document.getElementById('request-list');
+            
+            // Mock Data สำหรับรายการลา (อ้างอิงประเภทการลาจาก PDF [cite: 44-48])
+            const requests = [
+                { type: "Sick Leave", start: "Jan 15 2025", end: "Jan 19 2025", days: 5, status: "Approved", reason: "Covid-19", color: "bg-green-100 text-green-700" },
+                { type: "Unpaid Leave", start: "Jan 10 2025", end: "Jan 12 2025", days: 3, status: "Pending", reason: "Visiting family at Bangkok", color: "bg-orange-100 text-orange-700" },
+                { type: "Personal Leave", start: "Jan 05 2025", end: "Jan 09 2025", days: 5, status: "Approved", reason: "Private business", color: "bg-green-100 text-green-700" }
+            ];
+
+            listContainer.innerHTML = requests.map(req => `
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="font-bold text-lg">สมชาย ใจดี</h4>
+                            <p class="text-sm font-medium ${req.type === 'Sick Leave' ? 'text-red-500' : 'text-blue-500'}">${req.type}</p>
+                        </div>
+                        <span class="px-4 py-1.5 ${req.color} text-xs rounded-full font-bold uppercase tracking-wider">
+                            ${req.status}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm text-gray-500">
+                        <p class="flex items-center space-x-2 text-gray-600">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>${req.start} - ${req.end}</span>
+                        </p>
+                        <p class="flex items-center space-x-2">
+                            <i data-lucide="clock" class="w-4 h-4 text-gray-400"></i>
+                            <span>${req.days} days</span>
+                        </p>
+                        <div class="pt-3 border-t mt-3">
+                            <p class="text-xs text-gray-400 uppercase font-bold tracking-tight">Reason</p>
+                            <p class="text-gray-700 italic mt-1 leading-relaxed">"${req.reason}"</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        window.onload = renderRequests;
+    </script>
+</body>
+</html>

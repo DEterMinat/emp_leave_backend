@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Information (HR) - Leave System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900">
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">HR Management</h1>
+                        <p class="text-sm text-gray-500 italic">การจัดการข้อมูลพนักงาน</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-8 mt-2 overflow-x-auto">
+                <a href="dashboard-hr.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-request-hr.html" class="border-b-2 border-transparent px-1 py-4 text-gray-500 hover:text-gray-700 flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                    <span>Manage Request</span>
+                </a>
+                <a href="#" class="border-b-2 border-blue-600 px-1 py-4 text-blue-600 font-medium flex items-center space-x-2 transition whitespace-nowrap">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Manage Information</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">Employees List</h2>
+            <div class="relative w-64">
+                <input type="text" placeholder="Search employee..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-8 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Employee Name</th>
+                            <th class="px-8 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider">Department</th>
+                            <th class="px-8 py-4 text-sm font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50" id="employee-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all max-h-[90vh] flex flex-col">
+            <div class="p-8 border-b flex justify-between items-center bg-white sticky top-0 z-10">
+                <h3 class="text-xl font-bold">Edit Information</h3>
+                <button onclick="closeEditModal()" class="p-2 hover:bg-gray-100 rounded-full transition">
+                    <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+                </button>
+            </div>
+            
+            <form id="editForm" class="p-8 space-y-6 overflow-y-auto">
+                <div class="flex flex-col items-center mb-6">
+                    <div class="w-24 h-24 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full flex items-center justify-center text-blue-500 mb-2">
+                        <i data-lucide="user" class="w-12 h-12"></i>
+                    </div>
+                    <button type="button" class="text-xs font-bold text-blue-600 hover:underline">Change Photo</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">First Name</label>
+                        <input type="text" id="editFirstName" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Last Name</label>
+                        <input type="text" id="editLastName" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Email</label>
+                        <input type="email" id="editEmail" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Phone</label>
+                        <input type="text" id="editPhone" class="w-full border rounded-xl px-4 py-2.5 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t">
+                    <h4 class="font-bold text-gray-800 mb-4">Leave Quota Management</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-orange-50 rounded-2xl">
+                            <span class="font-bold text-orange-700">Annual Leave (ลาพักผ่อน)</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="quotaAnnual" class="w-16 text-center border rounded-lg py-1 outline-none">
+                                <span class="text-sm text-gray-500">Days</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-red-50 rounded-2xl">
+                            <span class="font-bold text-red-700">Sick Leave (ลาป่วย)</span>
+                            <span class="text-sm text-gray-600">30 Days (Fixed)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 py-4 border rounded-2xl text-gray-600 font-bold hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const employees = [
+            { id: 1, name: "สมชาย ใจดี", dept: "IT Support", email: "somchai@company.com", phone: "081-234-5678", annual: 6 },
+            { id: 2, name: "มณี มีทรัพย์", dept: "Accounting", email: "manee@company.com", phone: "082-345-6789", annual: 7 },
+            { id: 3, name: "วิชัย ชนะศึก", dept: "Production", email: "wichai@company.com", phone: "083-456-7890", annual: 8 }
+        ];
+
+        function renderEmployees() {
+            const tbody = document.getElementById('employee-table-body');
+            tbody.innerHTML = employees.map(emp => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-8 py-5 flex items-center space-x-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold">${emp.name}</span>
+                    </td>
+                    <td class="px-8 py-5 text-gray-500 font-medium">${emp.dept}</td>
+                    <td class="px-8 py-5 text-right">
+                        <button onclick="openEditModal(${emp.id})" class="bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-blue-700 transition flex items-center space-x-2 ml-auto shadow-sm">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>Edit Information</span>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openEditModal(id) {
+            const emp = employees.find(e => e.id === id);
+            const nameParts = emp.name.split(" ");
+            document.getElementById('editFirstName').value = nameParts[0];
+            document.getElementById('editLastName').value = nameParts[1];
+            document.getElementById('editEmail').value = emp.email;
+            document.getElementById('editPhone').value = emp.phone;
+            document.getElementById('quotaAnnual').value = emp.annual;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        window.onload = renderEmployees;
+    </script>
+</body>
+</html>
