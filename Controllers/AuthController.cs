@@ -79,6 +79,44 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Username already exists" });
         }
 
+        // Validate Role (Support both ID and Name)
+        string roleId = request.RoleId;
+        bool isObjectId = MongoDB.Bson.ObjectId.TryParse(request.RoleId, out _);
+
+        if (isObjectId)
+        {
+            // Verify if role exists
+            var roleExists = await _context.Roles.Find(r => r.Id == request.RoleId).AnyAsync();
+            if (!roleExists)
+            {
+                return BadRequest(new { message = $"Invalid Role ID: {request.RoleId} not found" });
+            }
+        }
+        else
+        {
+            // Try lookup by name (case-insensitive)
+            var role = await _context.Roles.Find(r => r.RoleName.ToLower() == request.RoleId.ToLower()).FirstOrDefaultAsync();
+            if (role == null)
+            {
+                // Try create default roles if not exist (Helper for Demo)
+                if (request.RoleId.ToLower() == "admin" || request.RoleId.ToLower() == "manager" || request.RoleId.ToLower() == "hr" || request.RoleId.ToLower() == "employee")
+                {
+                     var newRole = new Role { RoleName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(request.RoleId) };
+                     await _context.Roles.InsertOneAsync(newRole);
+                     roleId = newRole.Id!;
+                     _logger.LogInformation("✨ Created new role: {RoleName}", newRole.RoleName);
+                }
+                else
+                {
+                    return BadRequest(new { message = $"Role '{request.RoleId}' not found. Please use a valid Role ID or Name (Admin, Manager, HR, Employee)." });
+                }
+            }
+            else
+            {
+                roleId = role.Id!;
+            }
+        }
+
         // Hash password
         var hashedPassword = PasswordHelper.HashPassword(request.Password);
 
@@ -86,7 +124,7 @@ public class AuthController : ControllerBase
         {
             Username = request.Username,
             Password = hashedPassword,
-            RoleId = request.RoleId,
+            RoleId = roleId,
             CreatedAt = DateTime.UtcNow
         };
 
