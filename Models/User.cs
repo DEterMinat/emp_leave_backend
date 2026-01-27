@@ -19,6 +19,17 @@ public class User
     [BsonRepresentation(BsonType.ObjectId)]
     public string RoleId { get; set; } = null!;
 
+    // --- เพิ่มฟิลด์ใหม่เหล่านี้เข้าไปเพื่อให้ MongoDB มีที่เก็บข้อมูลครับ ---
+    [BsonElement("email")]
+    public string? Email { get; set; }
+
+    [BsonElement("phone")]
+    public string? Phone { get; set; }
+
+    [BsonElement("annualLeaveQuota")]
+    public int? AnnualLeaveQuota { get; set; }
+    // -----------------------------------------------------------
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

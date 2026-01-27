@@ -57,7 +57,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("{id}/approve")]
-    [Authorize(Roles = "Admin,Manager")] // Only Approvers
+    [Authorize(Roles = "Admin,Manager,HR")] // Only Approvers
     public async Task<ActionResult<LeaveRequestDto>> Approve(string id, [FromBody] LeaveRequestUpdateDto dto)
     {
         var request = await _leaveService.ApproveAsync(id, dto);
@@ -66,7 +66,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("{id}/reject")]
-    [Authorize(Roles = "Admin,Manager")] // Only Approvers
+    [Authorize(Roles = "Admin,Manager,HR")] // Only Approvers
     public async Task<ActionResult<LeaveRequestDto>> Reject(string id, [FromBody] LeaveRequestUpdateDto dto)
     {
         var request = await _leaveService.RejectAsync(id, dto);

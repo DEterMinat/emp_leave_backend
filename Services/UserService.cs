@@ -67,6 +67,12 @@ public class UserService : IUserService
         }
         
         if (!string.IsNullOrEmpty(dto.RoleId)) update = update.Set(u => u.RoleId, dto.RoleId);
+
+        // --- เพิ่มส่วนนี้เพื่อให้บันทึกข้อมูลใหม่ได้ ---
+        if (!string.IsNullOrEmpty(dto.Email)) update = update.Set(u => u.Email, dto.Email);
+        if (!string.IsNullOrEmpty(dto.Phone)) update = update.Set(u => u.Phone, dto.Phone);
+        if (dto.AnnualLeaveQuota.HasValue) update = update.Set(u => u.AnnualLeaveQuota, dto.AnnualLeaveQuota.Value);
+        // ---------------------------------------
         
         var result = await _context.Users.UpdateOneAsync(u => u.Id == id, update);
         if (result.MatchedCount == 0) return null;
@@ -95,7 +101,12 @@ public class UserService : IUserService
             RoleId = u.RoleId,
             CreatedAt = u.CreatedAt,
             UpdatedAt = u.UpdatedAt,
-            RoleName = role?.RoleName
+            RoleName = role?.RoleName,
+            // --- เพิ่มการ Map ฟิลด์ใหม่กลับไปยัง DTO ---
+            Email = u.Email,
+            Phone = u.Phone,
+            AnnualLeaveQuota = u.AnnualLeaveQuota
+            // ---------------------------------------
         };
     }
 }

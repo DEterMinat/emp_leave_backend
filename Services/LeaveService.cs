@@ -126,7 +126,7 @@ public class LeaveService : ILeaveService
 
     private async Task<LeaveRequestDto> MapToDto(LeaveRequest r)
     {
-        var emp = await _context.Employees.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();
+        var emp = await _context.Users.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();
         var type = await _context.LeaveTypes.Find(t => t.Id == r.LeaveTypeId).FirstOrDefaultAsync();
         
         return new LeaveRequestDto
@@ -143,7 +143,7 @@ public class LeaveService : ILeaveService
             RequestedDate = r.RequestedDate,
             ApproverId = r.ApproverId,
             ApprovedDate = r.ApprovedDate,
-            EmployeeName = emp != null ? $"{emp.FirstName} {emp.LastName}" : null,
+            EmployeeName = emp != null ? emp.Username : "Unknown User",
             LeaveTypeName = type?.TypeName
         };
     }

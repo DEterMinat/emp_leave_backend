@@ -18,7 +18,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,Manager")] // Only Admin/Manager can list all users
+    [Authorize(Roles = "Admin,Manager,HR")] // Only Admin/Manager can list all users
     public async Task<ActionResult<List<UserResponseDto>>> GetAll()
     {
         var users = await _userService.GetAllAsync();
@@ -57,15 +57,20 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<UserResponseDto>> Update(string id, [FromBody] UserUpdateDto dto)
     {
-        // Security: Only Admin or the User themselves can update
+        // 1. ดึงข้อมูล User และ Role จาก Token
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        
+        // 2. ประกาศตัวแปรทั้งสองตัวเพื่อใช้ตรวจสอบสิทธิ์
         var isAdmin = User.IsInRole("Admin");
+        var isHR = User.IsInRole("HR");
 
-        if (!isAdmin && currentUserId != id)
+        // 3. ตรวจสอบว่า "มีสิทธิ์แก้ไขหรือไม่" (Admin หรือ HR หรือ เจ้าของบัญชี)
+        if (!isAdmin && !isHR && currentUserId != id)
         {
-            return Forbid();
+            return Forbid(); // หากไม่ใช่กลุ่มด้านบน จะส่ง 403 Forbidden
         }
 
+        // 4. ดำเนินการอัปเดตข้อมูลผ่าน Service
         var updatedUser = await _userService.UpdateAsync(id, dto);
         if (updatedUser == null) return NotFound();
         
