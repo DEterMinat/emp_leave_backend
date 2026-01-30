@@ -9,9 +9,9 @@ namespace EmployeeLeaveApi.Services;
 
 public class UserService : IUserService
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public UserService(MongoDbContext context)
+    public UserService(IMongoDbContext context)
     {
         _context = context;
     }

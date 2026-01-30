@@ -11,6 +11,9 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using EmployeeLeaveApi.Hubs;
+using Microsoft.AspNetCore.Mvc;
+
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -30,6 +33,8 @@ try
 
     // Add services to the container
     builder.Services.AddControllers();
+    builder.Services.AddSignalR();
+
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
     builder.Services.AddEndpointsApiExplorer();
@@ -71,7 +76,7 @@ try
     });
 
     // MongoDB
-builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -107,10 +112,12 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:8080") // Add your frontend origins
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials(); // Required for SignalR
         });
+
     });
 
     // Rate Limiting
@@ -157,12 +164,14 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHub<NotificationHub>("/notificationHub");
+
 
     // Root endpoint
     app.MapGet("/", () => new { message = "Employee Leave API - Go to /docs for Swagger UI" });
 
     // Health check with MongoDB test
-    app.MapGet("/health", async (MongoDbContext db) => 
+    app.MapGet("/health", async ([FromServices] IMongoDbContext db) => 
     {
         var mongoConnected = await db.TestConnectionAsync();
         return new { 

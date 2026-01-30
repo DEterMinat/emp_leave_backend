@@ -1,18 +1,24 @@
-using MongoDB.Driver;
+using EmployeeLeaveApi.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using EmployeeLeaveApi.Data;
 using EmployeeLeaveApi.DTOs;
 using EmployeeLeaveApi.Models;
+using MongoDB.Driver;
 
 namespace EmployeeLeaveApi.Services;
 
+
 public class LeaveService : ILeaveService
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public LeaveService(MongoDbContext context)
+    public LeaveService(IMongoDbContext context, IHubContext<NotificationHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
+
 
     public async Task<List<LeaveRequestDto>> GetAllAsync(string? status = null)
     {
@@ -66,7 +72,13 @@ public class LeaveService : ILeaveService
         };
         
         await _context.LeaveRequests.InsertOneAsync(request);
-        return await MapToDto(request);
+        var resDto = await MapToDto(request);
+
+        // Notify Managers/HR
+        await _hubContext.Clients.Group("Managers")
+            .SendAsync("ReceiveNotification", "New Leave Request", $"New request from {resDto.EmployeeName} for {resDto.LeaveTypeName}");
+
+        return resDto;
     }
 
     public async Task<LeaveRequestDto> CreateWithFileAsync(LeaveRequestCreateDto dto, Stream? fileStream, string? fileName)
@@ -135,8 +147,18 @@ public class LeaveService : ILeaveService
             }
         }
         
-        return await GetByIdAsync(id);
+        
+        var updatedRequest = await GetByIdAsync(id);
+        if (updatedRequest != null)
+        {
+            // Send real-time notification to the employee
+            await _hubContext.Clients.Group(updatedRequest.EmployeeId)
+                .SendAsync("ReceiveNotification", "Leave Approved", $"Your leave request for {updatedRequest.LeaveTypeName} has been Approved.");
+        }
+
+        return updatedRequest;
     }
+
 
     public async Task<LeaveRequestDto?> RejectAsync(string id, LeaveRequestUpdateDto dto)
     {
@@ -149,8 +171,18 @@ public class LeaveService : ILeaveService
         var result = await _context.LeaveRequests.UpdateOneAsync(r => r.Id == id, update);
         if (result.MatchedCount == 0) return null;
         
-        return await GetByIdAsync(id);
+        
+        var updatedRequest = await GetByIdAsync(id);
+        if (updatedRequest != null)
+        {
+            // Send real-time notification to the employee
+            await _hubContext.Clients.Group(updatedRequest.EmployeeId)
+                .SendAsync("ReceiveNotification", "Leave Rejected", $"Your leave request for {updatedRequest.LeaveTypeName} has been Rejected.");
+        }
+
+        return updatedRequest;
     }
+
 
     public async Task<bool> DeleteAsync(string id)
     {

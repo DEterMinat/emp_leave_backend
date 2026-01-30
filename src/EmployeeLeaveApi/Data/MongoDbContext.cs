@@ -3,7 +3,7 @@ using EmployeeLeaveApi.Models;
 
 namespace EmployeeLeaveApi.Data;
 
-public class MongoDbContext
+public class MongoDbContext : IMongoDbContext
 {
     private readonly IMongoDatabase _database;
     private readonly MongoClient _client;
@@ -31,6 +31,8 @@ public class MongoDbContext
     public IMongoCollection<LeaveRequest> LeaveRequests => _database.GetCollection<LeaveRequest>("leaveRequests");
     public IMongoCollection<LeaveBalance> LeaveBalances => _database.GetCollection<LeaveBalance>("leaveBalances");
     public IMongoCollection<LeaveAttachment> LeaveAttachments => _database.GetCollection<LeaveAttachment>("leaveAttachments");
+    public IMongoCollection<DeviceToken> DeviceTokens => _database.GetCollection<DeviceToken>("deviceTokens");
+
 
     public async Task<bool> TestConnectionAsync()
     {

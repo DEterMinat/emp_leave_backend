@@ -29,16 +29,22 @@ jobs:
           ${{ runner.os }}-nuget-
 
     - name: 🔍 Restore Dependencies
-      run: dotnet restore EmployeeLeaveApi.csproj
+      run: dotnet restore EmployeeLeaveApp.sln
       
     - name: 🧹 Check Code Format
       run: dotnet format --verify-no-changes
       
-    - name: 🏗️ Build Application
-      run: dotnet build EmployeeLeaveApi.csproj --no-restore --configuration Release
+    - name: 🏗️ Build Solution
+      run: dotnet build EmployeeLeaveApp.sln --no-restore --configuration Release
+      
+    - name: 🧪 Run Tests
+      run: dotnet test EmployeeLeaveApp.sln --no-build --configuration Release
       
     - name: 📁 Publish Application
-      run: dotnet publish EmployeeLeaveApi.csproj -c Release -o ./publish
+      run: dotnet publish src/EmployeeLeaveApi/EmployeeLeaveApi.csproj -c Release -o ./publish
+
+    - name: 🐳 Build Docker Image
+      run: docker build -t emp-leave-backend:latest .
 
     - name: 📤 Upload Build Artifact
       uses: actions/upload-artifact@v4
