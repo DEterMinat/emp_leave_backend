@@ -9,6 +9,7 @@ public interface ILeaveService
     Task<LeaveRequestDto?> GetByIdAsync(string id);
     Task<List<LeaveRequestDto>> GetByEmployeeIdAsync(string employeeId);
     Task<LeaveRequestDto> CreateAsync(LeaveRequestCreateDto dto);
+    Task<LeaveRequestDto> CreateWithFileAsync(LeaveRequestCreateDto dto, Stream? fileStream, string? fileName);
     Task<LeaveRequestDto?> ApproveAsync(string id, LeaveRequestUpdateDto dto);
     Task<LeaveRequestDto?> RejectAsync(string id, LeaveRequestUpdateDto dto);
     Task<bool> DeleteAsync(string id);

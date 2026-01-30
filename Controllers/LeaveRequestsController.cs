@@ -56,6 +56,20 @@ public class LeaveRequestsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = request.Id }, request);
     }
 
+    [HttpPost("with-attachment")]
+    public async Task<ActionResult<LeaveRequestDto>> CreateWithAttachment([FromForm] LeaveRequestCreateWithFileDto dto)
+    {
+        Stream? stream = null;
+        if (dto.File != null && dto.File.Length > 0)
+        {
+            stream = dto.File.OpenReadStream();
+        }
+        
+        // Pass the DTO (which inherits from LeaveRequestCreateDto) and file stream
+        var request = await _leaveService.CreateWithFileAsync(dto, stream, dto.File?.FileName);
+        return CreatedAtAction(nameof(GetById), new { id = request.Id }, request);
+    }
+
     [HttpPut("{id}/approve")]
     [Authorize(Roles = "Admin,Manager,HR")] // Only Approvers
     public async Task<ActionResult<LeaveRequestDto>> Approve(string id, [FromBody] LeaveRequestUpdateDto dto)

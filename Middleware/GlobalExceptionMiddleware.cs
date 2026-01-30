@@ -30,14 +30,16 @@ public class GlobalExceptionMiddleware
     {
         var statusCode = HttpStatusCode.InternalServerError;
         var message = "An unexpected error occurred";
-
-        // Log the error
+        
+        // Log the error with more details
         _logger.LogError(exception, 
-            "❌ Error occurred: {Message} | Path: {Path} | Method: {Method} | User: {User}",
+            "❌ Error occurred: {Message} | Path: {Path} | Query: {Query} | Method: {Method} | User: {User} | IP: {Ip}",
             exception.Message,
             context.Request.Path,
+            context.Request.QueryString,
             context.Request.Method,
-            context.User?.Identity?.Name ?? "Anonymous");
+            context.User?.Identity?.Name ?? "Anonymous",
+            context.Connection.RemoteIpAddress);
 
         // Determine error type
         switch (exception)
@@ -58,10 +60,19 @@ public class GlobalExceptionMiddleware
                 statusCode = HttpStatusCode.BadRequest;
                 message = exception.Message;
                 break;
+            case FluentValidation.ValidationException validationEx:
+                statusCode = HttpStatusCode.BadRequest;
+                message = "Validation Error";
+                // You might want to serialize errors here, but for now we keep it simple or append to message
+                break;
         }
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
+
+        // Check environment for StackTrace
+        var env = context.RequestServices.GetService<IWebHostEnvironment>();
+        var isDev = env != null && env.IsDevelopment();
 
         var response = new
         {
@@ -70,7 +81,8 @@ public class GlobalExceptionMiddleware
                 message,
                 statusCode = (int)statusCode,
                 timestamp = DateTime.UtcNow,
-                path = context.Request.Path.Value
+                path = context.Request.Path.Value,
+                details = isDev ? exception.StackTrace : null // Only show stack trace in Dev
             }
         };
 

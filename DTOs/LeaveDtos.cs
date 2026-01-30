@@ -42,6 +42,11 @@ public class LeaveRequestCreateDto
     public string Reason { get; set; } = null!;
 }
 
+public class LeaveRequestCreateWithFileDto : LeaveRequestCreateDto
+{
+    public Microsoft.AspNetCore.Http.IFormFile? File { get; set; }
+}
+
 public class LeaveRequestUpdateDto
 {
     public string? Status { get; set; } // Approved, Rejected

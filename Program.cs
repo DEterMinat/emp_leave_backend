@@ -9,10 +9,12 @@ using EmployeeLeaveApi.Middleware;
 using EmployeeLeaveApi.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
+    .Enrich.FromLogContext()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.File("logs/log-.txt", 
         rollingInterval: RollingInterval.Day,
@@ -111,10 +113,31 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
         });
     });
 
+    // Rate Limiting
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 100,
+                    QueueLimit = 2,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
+        
+        options.OnRejected = async (context, token) =>
+        {
+            context.HttpContext.Response.StatusCode = 429;
+            await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken: token);
+        };
+    });
+
     var app = builder.Build();
 
     // Global Exception Handler
-    app.UseGlobalExceptionHandler();
+    app.UseMiddleware<GlobalExceptionMiddleware>();
 
     // Configure the HTTP request pipeline
     if (app.Environment.IsDevelopment())
@@ -127,7 +150,10 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
         });
     }
 
+    app.UseSecurityHeaders(); // Security Headers
+    app.UseRateLimiter(); // Rate Limiting
     app.UseCors("AllowFrontend");
+    app.UseStaticFiles(); // Enable serving static files (uploads)
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();

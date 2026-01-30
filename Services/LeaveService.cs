@@ -69,6 +69,40 @@ public class LeaveService : ILeaveService
         return await MapToDto(request);
     }
 
+    public async Task<LeaveRequestDto> CreateWithFileAsync(LeaveRequestCreateDto dto, Stream? fileStream, string? fileName)
+    {
+        // 1. Create Leave Request first
+        var requestDto = await CreateAsync(dto);
+        
+        if (fileStream != null && !string.IsNullOrEmpty(fileName))
+        {
+            // 2. Save File
+            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsDir)) Directory.CreateDirectory(uploadsDir);
+            
+            var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+            var filePath = Path.Combine(uploadsDir, uniqueFileName);
+            
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await fileStream.CopyToAsync(stream);
+            }
+            
+            // 3. Create Attachment Record
+            var attachment = new LeaveAttachment
+            {
+                RequestId = requestDto.Id,
+                FileName = fileName,
+                FilePath = $"/uploads/{uniqueFileName}", // Relative path for serving
+                UploadedDate = DateTime.UtcNow
+            };
+            
+            await _context.LeaveAttachments.InsertOneAsync(attachment);
+        }
+        
+        return requestDto;
+    }
+
     public async Task<LeaveRequestDto?> ApproveAsync(string id, LeaveRequestUpdateDto dto)
     {
         var update = Builders<LeaveRequest>.Update
