@@ -44,6 +44,31 @@ public class EmployeesController : ControllerBase
         return Ok(dtos);
     }
 
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<EmployeeDto>> GetByUserId(string userId)
+    {
+        var e = await _context.Employees.Find(emp => emp.UserId == userId).FirstOrDefaultAsync();
+        if (e == null) return NotFound();
+        
+        var dept = await _context.Departments.Find(d => d.Id == e.DepartmentId).FirstOrDefaultAsync();
+        var user = await _context.Users.Find(u => u.Id == e.UserId).FirstOrDefaultAsync();
+        
+        return Ok(new EmployeeDto
+        {
+            Id = e.Id!,
+            UserId = e.UserId,
+            DepartmentId = e.DepartmentId,
+            FirstName = e.FirstName,
+            LastName = e.LastName,
+            Email = e.Email,
+            Phone = e.Phone,
+            Address = e.Address,
+            CreatedAt = e.CreatedAt,
+            DepartmentName = dept?.DepartmentName,
+            Username = user?.Username
+        });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<EmployeeDto>> GetById(string id)
     {
