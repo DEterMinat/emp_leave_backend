@@ -9,9 +9,9 @@ namespace EmployeeLeaveApi.Controllers;
 [Route("api/[controller]")]
 public class SeederController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public SeederController(MongoDbContext context)
+    public SeederController(IMongoDbContext context)
     {
         _context = context;
     }

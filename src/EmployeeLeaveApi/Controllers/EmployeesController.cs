@@ -10,9 +10,9 @@ namespace EmployeeLeaveApi.Controllers;
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public EmployeesController(MongoDbContext context) => _context = context;
+    public EmployeesController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
     public async Task<ActionResult<List<EmployeeDto>>> GetAll()

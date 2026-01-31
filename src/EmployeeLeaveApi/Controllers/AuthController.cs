@@ -11,11 +11,11 @@ namespace EmployeeLeaveApi.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
     private readonly JwtHelper _jwtHelper;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(MongoDbContext context, JwtHelper jwtHelper, ILogger<AuthController> logger)
+    public AuthController(IMongoDbContext context, JwtHelper jwtHelper, ILogger<AuthController> logger)
     {
         _context = context;
         _jwtHelper = jwtHelper;

@@ -75,8 +75,9 @@ try
         });
     });
 
-    // MongoDB
-builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
+    // MongoDB - register concrete and map interface to same instance
+    builder.Services.AddSingleton<MongoDbContext>();
+    builder.Services.AddSingleton<IMongoDbContext>(sp => sp.GetRequiredService<MongoDbContext>());
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();

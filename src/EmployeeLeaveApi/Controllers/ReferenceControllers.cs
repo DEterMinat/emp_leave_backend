@@ -10,9 +10,9 @@ namespace EmployeeLeaveApi.Controllers;
 [Route("api/[controller]")]
 public class RolesController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public RolesController(MongoDbContext context) => _context = context;
+    public RolesController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
     public async Task<ActionResult<List<RoleDto>>> GetAll()
@@ -50,9 +50,9 @@ public class RolesController : ControllerBase
 [Route("api/[controller]")]
 public class DepartmentsController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public DepartmentsController(MongoDbContext context) => _context = context;
+    public DepartmentsController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
     public async Task<ActionResult<List<DepartmentDto>>> GetAll()
@@ -90,9 +90,9 @@ public class DepartmentsController : ControllerBase
 [Route("api/[controller]")]
 public class LeaveTypesController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public LeaveTypesController(MongoDbContext context) => _context = context;
+    public LeaveTypesController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
     public async Task<ActionResult<List<LeaveTypeDto>>> GetAll()

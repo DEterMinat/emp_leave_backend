@@ -10,9 +10,9 @@ namespace EmployeeLeaveApi.Controllers;
 [Route("api/[controller]")]
 public class LeaveBalancesController : ControllerBase
 {
-    private readonly MongoDbContext _context;
+    private readonly IMongoDbContext _context;
 
-    public LeaveBalancesController(MongoDbContext context) => _context = context;
+    public LeaveBalancesController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
     public async Task<ActionResult<List<LeaveBalanceDto>>> GetAll()

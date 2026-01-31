@@ -86,7 +86,7 @@ docker-compose up --build
 ### Users
 
 | Method | Endpoint          | Description    |
-| ------ | ----------------- | -------------- |
+| ------ | ----------------- | -------------- |   
 | GET    | `/api/users`      | List all users |
 | GET    | `/api/users/{id}` | Get user by ID |
 | PUT    | `/api/users/{id}` | Update user    |
