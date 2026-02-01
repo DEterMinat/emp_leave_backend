@@ -97,7 +97,7 @@ public class LeaveServiceTests
 
         // 2. Mock Find for the request (needed for balance update and mapping)
         SetupMockCursor(_mockLeaveRequests, new List<LeaveRequest> { request });
-        
+
         // 3. Mock Find for the balance
         SetupMockCursor(_mockLeaveBalances, new List<LeaveBalance> { balance });
 
@@ -124,14 +124,14 @@ public class LeaveServiceTests
 
         // Assert - Verify the correct methods were called
         _mockLeaveRequests.Verify(c => c.UpdateOneAsync(
-            It.IsAny<FilterDefinition<LeaveRequest>>(), 
-            It.IsAny<UpdateDefinition<LeaveRequest>>(), 
-            null, 
+            It.IsAny<FilterDefinition<LeaveRequest>>(),
+            It.IsAny<UpdateDefinition<LeaveRequest>>(),
+            null,
             default), Times.Once);
         _mockLeaveBalances.Verify(c => c.UpdateOneAsync(
-            It.IsAny<FilterDefinition<LeaveBalance>>(), 
-            It.IsAny<UpdateDefinition<LeaveBalance>>(), 
-            null, 
+            It.IsAny<FilterDefinition<LeaveBalance>>(),
+            It.IsAny<UpdateDefinition<LeaveBalance>>(),
+            null,
             default), Times.Once);
     }
 

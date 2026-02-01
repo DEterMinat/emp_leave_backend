@@ -19,12 +19,12 @@ public class EmployeesController : ControllerBase
     {
         var employees = await _context.Employees.Find(_ => true).ToListAsync();
         var dtos = new List<EmployeeDto>();
-        
+
         foreach (var e in employees)
         {
             var dept = await _context.Departments.Find(d => d.Id == e.DepartmentId).FirstOrDefaultAsync();
             var user = await _context.Users.Find(u => u.Id == e.UserId).FirstOrDefaultAsync();
-            
+
             dtos.Add(new EmployeeDto
             {
                 Id = e.Id!,
@@ -40,7 +40,7 @@ public class EmployeesController : ControllerBase
                 Username = user?.Username
             });
         }
-        
+
         return Ok(dtos);
     }
 
@@ -49,10 +49,10 @@ public class EmployeesController : ControllerBase
     {
         var e = await _context.Employees.Find(emp => emp.UserId == userId).FirstOrDefaultAsync();
         if (e == null) return NotFound();
-        
+
         var dept = await _context.Departments.Find(d => d.Id == e.DepartmentId).FirstOrDefaultAsync();
         var user = await _context.Users.Find(u => u.Id == e.UserId).FirstOrDefaultAsync();
-        
+
         return Ok(new EmployeeDto
         {
             Id = e.Id!,
@@ -74,10 +74,10 @@ public class EmployeesController : ControllerBase
     {
         var e = await _context.Employees.Find(emp => emp.Id == id).FirstOrDefaultAsync();
         if (e == null) return NotFound();
-        
+
         var dept = await _context.Departments.Find(d => d.Id == e.DepartmentId).FirstOrDefaultAsync();
         var user = await _context.Users.Find(u => u.Id == e.UserId).FirstOrDefaultAsync();
-        
+
         return Ok(new EmployeeDto
         {
             Id = e.Id!,
@@ -108,9 +108,9 @@ public class EmployeesController : ControllerBase
             Address = dto.Address,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         await _context.Employees.InsertOneAsync(employee);
-        return CreatedAtAction(nameof(GetById), new { id = employee.Id }, 
+        return CreatedAtAction(nameof(GetById), new { id = employee.Id },
             new EmployeeDto
             {
                 Id = employee.Id!,
@@ -129,17 +129,17 @@ public class EmployeesController : ControllerBase
     public async Task<ActionResult<EmployeeDto>> Update(string id, [FromBody] EmployeeUpdateDto dto)
     {
         var update = Builders<Employee>.Update.Set(e => e.UpdatedAt, DateTime.UtcNow);
-        
+
         if (!string.IsNullOrEmpty(dto.DepartmentId)) update = update.Set(e => e.DepartmentId, dto.DepartmentId);
         if (!string.IsNullOrEmpty(dto.FirstName)) update = update.Set(e => e.FirstName, dto.FirstName);
         if (!string.IsNullOrEmpty(dto.LastName)) update = update.Set(e => e.LastName, dto.LastName);
         if (!string.IsNullOrEmpty(dto.Email)) update = update.Set(e => e.Email, dto.Email);
         if (dto.Phone != null) update = update.Set(e => e.Phone, dto.Phone);
         if (dto.Address != null) update = update.Set(e => e.Address, dto.Address);
-        
+
         var result = await _context.Employees.UpdateOneAsync(e => e.Id == id, update);
         if (result.MatchedCount == 0) return NotFound();
-        
+
         return await GetById(id);
     }
 

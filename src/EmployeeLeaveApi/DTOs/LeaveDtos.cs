@@ -17,7 +17,7 @@ public class LeaveRequestDto
     public DateTime RequestedDate { get; set; }
     public string? ApproverId { get; set; }
     public DateTime? ApprovedDate { get; set; }
-    
+
     // Populated fields
     public string? EmployeeName { get; set; }
     public string? LeaveTypeName { get; set; }
@@ -29,16 +29,16 @@ public class LeaveRequestCreateDto
 {
     [Required]
     public string EmployeeId { get; set; } = null!;
-    
+
     [Required]
     public string LeaveTypeId { get; set; } = null!;
-    
+
     [Required]
     public DateTime StartDate { get; set; }
-    
+
     [Required]
     public DateTime EndDate { get; set; }
-    
+
     [Required]
     public string Reason { get; set; } = null!;
 }
@@ -65,7 +65,7 @@ public class LeaveBalanceDto
     public int TotalDays { get; set; }
     public int UsedDays { get; set; }
     public int RemainingDays { get; set; }
-    
+
     // Populated fields
     public string? LeaveTypeName { get; set; }
 }
@@ -74,13 +74,13 @@ public class LeaveBalanceCreateDto
 {
     [Required]
     public string EmployeeId { get; set; } = null!;
-    
+
     [Required]
     public string LeaveTypeId { get; set; } = null!;
-    
+
     [Required]
     public int Year { get; set; }
-    
+
     [Required]
     public int TotalDays { get; set; }
 }
@@ -99,10 +99,10 @@ public class LeaveAttachmentCreateDto
 {
     [Required]
     public string RequestId { get; set; } = null!;
-    
+
     [Required]
     public string FileName { get; set; } = null!;
-    
+
     [Required]
     public string FilePath { get; set; } = null!;
 }

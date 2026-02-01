@@ -32,14 +32,14 @@ public class UsersController : ControllerBase
     {
         var user = await _userService.GetByIdAsync(id);
         if (user == null) return NotFound();
-        
+
         // Security check: Users can only view their own profile unless Admin/Manager
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value; // Assumes "roleId" claim maps to role name or strictly roleId? Need to check JwtHelper.
 
         // TODO: In JwtHelper we put "roleId" claim, and "role" (claim type Role) as RoleName.
         // So User.IsInRole("Admin") should work if RoleName is "Admin".
-        
+
         // For simplicity now, allowing read. In strict mode, check rights.
         return Ok(user);
     }
@@ -51,9 +51,9 @@ public class UsersController : ControllerBase
         var existing = await _userService.GetByUsernameAsync(dto.Username);
         if (existing != null)
             return BadRequest(new { message = "Username already exists" });
-        
+
         var user = await _userService.CreateAsync(dto);
-        
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
@@ -68,7 +68,7 @@ public class UsersController : ControllerBase
     {
         // 1. ดึงข้อมูล User และ Role จาก Token
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        
+
         // 2. ประกาศตัวแปรทั้งสองตัวเพื่อใช้ตรวจสอบสิทธิ์
         var isAdmin = User.IsInRole("Admin");
         var isHR = User.IsInRole("HR");
@@ -82,12 +82,12 @@ public class UsersController : ControllerBase
         // 4. ดำเนินการอัปเดตข้อมูลผ่าน Service
         var updatedUser = await _userService.UpdateAsync(id, dto);
         if (updatedUser == null) return NotFound();
-        
+
         if (currentUserId != null)
         {
             await _logService.LogAsync(currentUserId, "UPDATE_USER", "User", id, $"Updated user {updatedUser.Username}");
         }
-        
+
         return Ok(updatedUser);
     }
 

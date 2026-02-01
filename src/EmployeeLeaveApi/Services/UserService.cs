@@ -20,12 +20,12 @@ public class UserService : IUserService
     {
         var users = await _context.Users.Find(_ => true).ToListAsync();
         var dtos = new List<UserResponseDto>();
-        
+
         foreach (var u in users)
         {
             dtos.Add(await MapToDto(u));
         }
-        
+
         return dtos;
     }
 
@@ -39,7 +39,7 @@ public class UserService : IUserService
     public async Task<UserResponseDto> CreateAsync(UserCreateDto dto)
     {
         var hashedPassword = PasswordHelper.HashPassword(dto.Password);
-        
+
         var user = new User
         {
             Username = dto.Username,
@@ -53,7 +53,7 @@ public class UserService : IUserService
             DepartmentId = dto.DepartmentId,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         await _context.Users.InsertOneAsync(user);
 
         // --- One-Stop Setup: Create Employee Profile & Initialize Balances ---
@@ -83,16 +83,16 @@ public class UserService : IUserService
 
             foreach (var type in leaveTypes)
             {
-                var totalDays = defaultDays.ContainsKey(type.TypeName) 
-                    ? defaultDays[type.TypeName] 
+                var totalDays = defaultDays.ContainsKey(type.TypeName)
+                    ? defaultDays[type.TypeName]
                     : (type.TypeName.Contains("Annual") ? (dto.AnnualLeaveQuota ?? 10) : 10);
 
                 var balance = new LeaveBalance
                 {
                     EmployeeId = user.Id!, // Note: Some parts of the system use UserId as EmployeeId, others use MongoDB's Employee.Id. 
-                                          // Looking at LeaveBalancesController, it uses 'EmployeeId'. 
-                                          // But in Dashboard, it queries by UserId. 
-                                          // I will stick to UserId for now as it's the current pattern in LeaveBalancesController.mine
+                                           // Looking at LeaveBalancesController, it uses 'EmployeeId'. 
+                                           // But in Dashboard, it queries by UserId. 
+                                           // I will stick to UserId for now as it's the current pattern in LeaveBalancesController.mine
                     LeaveTypeId = type.Id!,
                     Year = year,
                     TotalDays = totalDays,
@@ -103,7 +103,7 @@ public class UserService : IUserService
             }
         }
         // ------------------------------------------------------------------
-        
+
         // Ensure to return DTO with RoleName
         return await MapToDto(user);
     }
@@ -111,15 +111,15 @@ public class UserService : IUserService
     public async Task<UserResponseDto?> UpdateAsync(string id, UserUpdateDto dto)
     {
         var update = Builders<User>.Update.Set(u => u.UpdatedAt, DateTime.UtcNow);
-        
+
         if (!string.IsNullOrEmpty(dto.Username)) update = update.Set(u => u.Username, dto.Username);
-        
-        if (!string.IsNullOrEmpty(dto.Password)) 
+
+        if (!string.IsNullOrEmpty(dto.Password))
         {
             var hashedPassword = PasswordHelper.HashPassword(dto.Password);
             update = update.Set(u => u.Password, hashedPassword);
         }
-        
+
         if (!string.IsNullOrEmpty(dto.RoleId)) update = update.Set(u => u.RoleId, dto.RoleId);
 
         // --- เพิ่มส่วนนี้เพื่อให้บันทึกข้อมูลใหม่ได้ ---
@@ -130,10 +130,10 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(dto.LastName)) update = update.Set(u => u.LastName, dto.LastName);
         if (!string.IsNullOrEmpty(dto.DepartmentId)) update = update.Set(u => u.DepartmentId, dto.DepartmentId);
         // ---------------------------------------
-        
+
         var result = await _context.Users.UpdateOneAsync(u => u.Id == id, update);
         if (result.MatchedCount == 0) return null;
-        
+
         return await GetByIdAsync(id);
     }
 

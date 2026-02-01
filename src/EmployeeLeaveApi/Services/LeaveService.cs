@@ -22,18 +22,18 @@ public class LeaveService : ILeaveService
 
     public async Task<List<LeaveRequestDto>> GetAllAsync(string? status = null)
     {
-        var filter = status != null 
+        var filter = status != null
             ? Builders<LeaveRequest>.Filter.Eq(r => r.Status, status)
             : Builders<LeaveRequest>.Filter.Empty;
-            
+
         var requests = await _context.LeaveRequests.Find(filter).ToListAsync();
         var dtos = new List<LeaveRequestDto>();
-        
+
         foreach (var r in requests)
         {
             dtos.Add(await MapToDto(r));
         }
-        
+
         return dtos;
     }
 
@@ -58,7 +58,7 @@ public class LeaveService : ILeaveService
     public async Task<LeaveRequestDto> CreateAsync(LeaveRequestCreateDto dto)
     {
         var totalDays = (int)(dto.EndDate - dto.StartDate).TotalDays + 1;
-        
+
         var request = new LeaveRequest
         {
             EmployeeId = dto.EmployeeId,
@@ -70,7 +70,7 @@ public class LeaveService : ILeaveService
             Status = "Pending",
             RequestedDate = DateTime.UtcNow
         };
-        
+
         await _context.LeaveRequests.InsertOneAsync(request);
         var resDto = await MapToDto(request);
 
@@ -85,21 +85,21 @@ public class LeaveService : ILeaveService
     {
         // 1. Create Leave Request first
         var requestDto = await CreateAsync(dto);
-        
+
         if (fileStream != null && !string.IsNullOrEmpty(fileName))
         {
             // 2. Save File
             var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             if (!Directory.Exists(uploadsDir)) Directory.CreateDirectory(uploadsDir);
-            
+
             var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
             var filePath = Path.Combine(uploadsDir, uniqueFileName);
-            
+
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await fileStream.CopyToAsync(stream);
             }
-            
+
             // 3. Create Attachment Record
             var attachment = new LeaveAttachment
             {
@@ -108,10 +108,10 @@ public class LeaveService : ILeaveService
                 FilePath = $"/uploads/{uniqueFileName}", // Relative path for serving
                 UploadedDate = DateTime.UtcNow
             };
-            
+
             await _context.LeaveAttachments.InsertOneAsync(attachment);
         }
-        
+
         return requestDto;
     }
 
@@ -122,16 +122,16 @@ public class LeaveService : ILeaveService
             .Set(r => r.Comment, dto.Comment)
             .Set(r => r.ApproverId, dto.ApproverId)
             .Set(r => r.ApprovedDate, DateTime.UtcNow);
-        
+
         var result = await _context.LeaveRequests.UpdateOneAsync(r => r.Id == id, update);
         if (result.MatchedCount == 0) return null;
-        
+
         // Update leave balance
         var request = await _context.LeaveRequests.Find(r => r.Id == id).FirstOrDefaultAsync();
         if (request != null)
         {
             var year = DateTime.UtcNow.Year;
-            
+
             // Check if balance exists, if not create one (optional safeguard)
             var balance = await _context.LeaveBalances.Find(
                 b => b.EmployeeId == request.EmployeeId && b.LeaveTypeId == request.LeaveTypeId && b.Year == year
@@ -142,12 +142,12 @@ public class LeaveService : ILeaveService
                 var balanceUpdate = Builders<LeaveBalance>.Update
                     .Inc(b => b.UsedDays, request.TotalDays)
                     .Inc(b => b.RemainingDays, -request.TotalDays);
-                
+
                 await _context.LeaveBalances.UpdateOneAsync(b => b.Id == balance.Id, balanceUpdate);
             }
         }
-        
-        
+
+
         var updatedRequest = await GetByIdAsync(id);
         if (updatedRequest != null)
         {
@@ -167,11 +167,11 @@ public class LeaveService : ILeaveService
             .Set(r => r.Comment, dto.Comment)
             .Set(r => r.ApproverId, dto.ApproverId)
             .Set(r => r.ApprovedDate, DateTime.UtcNow);
-        
+
         var result = await _context.LeaveRequests.UpdateOneAsync(r => r.Id == id, update);
         if (result.MatchedCount == 0) return null;
-        
-        
+
+
         var updatedRequest = await GetByIdAsync(id);
         if (updatedRequest != null)
         {
@@ -208,7 +208,7 @@ public class LeaveService : ILeaveService
         var emp = await _context.Users.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();
         var type = await _context.LeaveTypes.Find(t => t.Id == r.LeaveTypeId).FirstOrDefaultAsync();
         var hasAttachments = await _context.LeaveAttachments.Find(a => a.RequestId == r.Id).AnyAsync();
-        
+
         return new LeaveRequestDto
         {
             Id = r.Id!,

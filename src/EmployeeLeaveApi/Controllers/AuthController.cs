@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
         _logger.LogInformation("🔐 Login attempt for user: {Username}", request.Username);
 
         var user = await _context.Users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
-        
+
         if (user == null)
         {
             _logger.LogWarning("❌ Login failed - User not found: {Username}", request.Username);
@@ -101,10 +101,10 @@ public class AuthController : ControllerBase
                 // Try create default roles if not exist (Helper for Demo)
                 if (request.RoleId.ToLower() == "admin" || request.RoleId.ToLower() == "manager" || request.RoleId.ToLower() == "hr" || request.RoleId.ToLower() == "employee")
                 {
-                     var newRole = new Role { RoleName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(request.RoleId) };
-                     await _context.Roles.InsertOneAsync(newRole);
-                     roleId = newRole.Id!;
-                     _logger.LogInformation("✨ Created new role: {RoleName}", newRole.RoleName);
+                    var newRole = new Role { RoleName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(request.RoleId) };
+                    await _context.Roles.InsertOneAsync(newRole);
+                    roleId = newRole.Id!;
+                    _logger.LogInformation("✨ Created new role: {RoleName}", newRole.RoleName);
                 }
                 else
                 {
@@ -176,7 +176,7 @@ public class LoginRequest
 {
     [Required]
     public string Username { get; set; } = null!;
-    
+
     [Required]
     public string Password { get; set; } = null!;
 }
@@ -195,11 +195,11 @@ public class RegisterRequest
     [Required]
     [StringLength(50, MinimumLength = 3)]
     public string Username { get; set; } = null!;
-    
+
     [Required]
     [StringLength(100, MinimumLength = 6)]
     public string Password { get; set; } = null!;
-    
+
     [Required]
     public string RoleId { get; set; } = null!;
 }
@@ -215,10 +215,10 @@ public class ChangePasswordRequest
 {
     [Required]
     public string UserId { get; set; } = null!;
-    
+
     [Required]
     public string OldPassword { get; set; } = null!;
-    
+
     [Required]
     [StringLength(100, MinimumLength = 6)]
     public string NewPassword { get; set; } = null!;

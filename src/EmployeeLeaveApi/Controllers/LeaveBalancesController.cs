@@ -20,13 +20,13 @@ public class LeaveBalancesController : ControllerBase
     {
         var balances = await _context.LeaveBalances.Find(_ => true).ToListAsync();
         var dtos = new List<LeaveBalanceDto>();
-        
+
         foreach (var b in balances)
         {
             var type = await _context.LeaveTypes.Find(t => t.Id == b.LeaveTypeId).FirstOrDefaultAsync();
             dtos.Add(MapToDto(b, type));
         }
-        
+
         return Ok(dtos);
     }
 
@@ -38,16 +38,16 @@ public class LeaveBalancesController : ControllerBase
                 Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, employeeId),
                 Builders<LeaveBalance>.Filter.Eq(b => b.Year, year.Value))
             : Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, employeeId);
-            
+
         var balances = await _context.LeaveBalances.Find(filter).ToListAsync();
         var dtos = new List<LeaveBalanceDto>();
-        
+
         foreach (var b in balances)
         {
             var type = await _context.LeaveTypes.Find(t => t.Id == b.LeaveTypeId).FirstOrDefaultAsync();
             dtos.Add(MapToDto(b, type));
         }
-        
+
         return Ok(dtos);
     }
 
@@ -86,7 +86,7 @@ public class LeaveBalancesController : ControllerBase
             UsedDays = 0,
             RemainingDays = dto.TotalDays
         };
-        
+
         await _context.LeaveBalances.InsertOneAsync(balance);
         return Ok(MapToDto(balance, null));
     }
@@ -97,7 +97,7 @@ public class LeaveBalancesController : ControllerBase
         // Get all leave types and create default balances
         var leaveTypes = await _context.LeaveTypes.Find(_ => true).ToListAsync();
         var balances = new List<LeaveBalance>();
-        
+
         var defaultDays = new Dictionary<string, int>
         {
             { "ลาพักผ่อน", 6 },
@@ -109,14 +109,14 @@ public class LeaveBalancesController : ControllerBase
             { "ลาอุปสมบท", 15 },
             { "Ordination Leave", 15 }
         };
-        
+
         foreach (var type in leaveTypes)
         {
             // Check if balance already exists
             var existing = await _context.LeaveBalances.Find(
                 b => b.EmployeeId == employeeId && b.LeaveTypeId == type.Id && b.Year == year
             ).FirstOrDefaultAsync();
-            
+
             if (existing == null)
             {
                 var totalDays = defaultDays.GetValueOrDefault(type.TypeName, 10);
@@ -133,7 +133,7 @@ public class LeaveBalancesController : ControllerBase
                 balances.Add(balance);
             }
         }
-        
+
         return Ok(balances.Select(b => MapToDto(b, null)));
     }
 

@@ -19,7 +19,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .Enrich.FromLogContext()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File("logs/log-.txt", 
+    .WriteTo.File("logs/log-.txt",
         rollingInterval: RollingInterval.Day,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .WriteTo.Conditional(
@@ -34,7 +34,7 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("🚀 Starting Employee Leave API...");
-    
+
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
@@ -45,17 +45,17 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
     builder.Services.AddEndpointsApiExplorer();
-    
+
     // Swagger with JWT support
     builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new() 
-        { 
-            Title = "Employee Leave API", 
+        c.SwaggerDoc("v1", new()
+        {
+            Title = "Employee Leave API",
             Version = "v1",
             Description = "API for Employee Leave Management System"
         });
-        
+
         // Add JWT Authentication to Swagger
         c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
@@ -65,7 +65,7 @@ try
             Type = SecuritySchemeType.ApiKey,
             Scheme = "Bearer"
         });
-        
+
         c.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
             {
@@ -86,10 +86,10 @@ try
     builder.Services.AddSingleton<MongoDbContext>();
     builder.Services.AddSingleton<IMongoDbContext>(sp => sp.GetRequiredService<MongoDbContext>());
 
-// Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ILeaveService, LeaveService>();
-builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
+    // Services
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ILeaveService, LeaveService>();
+    builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
     // JWT Helper
     builder.Services.AddSingleton<JwtHelper>();
@@ -97,7 +97,7 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
     // JWT Authentication
     var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "DefaultSecretKey123456789012345678901234567890";
     var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "EmployeeLeaveApi";
-    
+
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -142,7 +142,7 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
                     QueueLimit = 2,
                     Window = TimeSpan.FromMinutes(1)
                 }));
-        
+
         options.OnRejected = async (context, token) =>
         {
             context.HttpContext.Response.StatusCode = 429;
@@ -182,18 +182,19 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
     app.MapGet("/", () => new { message = "Employee Leave API - Go to /docs for Swagger UI" });
 
     // Health check with MongoDB test
-    app.MapGet("/health", async ([FromServices] IMongoDbContext db) => 
+    app.MapGet("/health", async ([FromServices] IMongoDbContext db) =>
     {
         var mongoConnected = await db.TestConnectionAsync();
-        return new { 
+        return new
+        {
             status = mongoConnected ? "healthy" : "unhealthy",
             mongodb = mongoConnected ? "connected" : "disconnected",
-            timestamp = DateTime.UtcNow 
+            timestamp = DateTime.UtcNow
         };
     });
 
     Log.Information("📚 Swagger UI: http://localhost:5000/docs");
-    
+
     app.Run();
 }
 catch (Exception ex)

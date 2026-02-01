@@ -30,9 +30,9 @@ public class GlobalExceptionMiddleware
     {
         var statusCode = HttpStatusCode.InternalServerError;
         var message = "An unexpected error occurred";
-        
+
         // Log the error with more details
-        _logger.LogError(exception, 
+        _logger.LogError(exception,
             "❌ Error occurred: {Message} | Path: {Path} | Query: {Query} | Method: {Method} | User: {User} | IP: {Ip}",
             exception.Message,
             context.Request.Path,

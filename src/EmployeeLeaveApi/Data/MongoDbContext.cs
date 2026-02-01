@@ -10,15 +10,15 @@ public class MongoDbContext : IMongoDbContext
 
     public MongoDbContext(IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("MongoDB") 
+        var connectionString = configuration.GetConnectionString("MongoDB")
             ?? configuration["MongoDB:ConnectionString"];
         var databaseName = configuration["MongoDB:DatabaseName"] ?? "emp-leave";
 
         Console.WriteLine($"📦 Connecting to MongoDB database: {databaseName}");
-        
+
         var settings = MongoClientSettings.FromConnectionString(connectionString);
         settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
-        
+
         _client = new MongoClient(settings);
         _database = _client.GetDatabase(databaseName);
     }

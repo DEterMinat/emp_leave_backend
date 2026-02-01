@@ -37,7 +37,7 @@ public class LeaveRequestsController : ControllerBase
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         // This requires logic to check if current user is the owner OR is manager/admin
         // For now, allowing all authorized users to call this, but ideally should be restricted in Service or here.
-        
+
         return Ok(request);
     }
 
@@ -55,7 +55,7 @@ public class LeaveRequestsController : ControllerBase
     {
         // Validation should happen in FluentValidation middleware mostly
         var request = await _leaveService.CreateAsync(dto);
-        
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
@@ -73,7 +73,7 @@ public class LeaveRequestsController : ControllerBase
         {
             stream = dto.File.OpenReadStream();
         }
-        
+
         // Pass the DTO (which inherits from LeaveRequestCreateDto) and file stream
         var request = await _leaveService.CreateWithFileAsync(dto, stream, dto.File?.FileName);
         return CreatedAtAction(nameof(GetById), new { id = request.Id }, request);
@@ -129,13 +129,13 @@ public class LeaveRequestsController : ControllerBase
             // We need to match properly. For now, assuming Strict Mode check:
             // Since we don't have easy User->Employee mapping here without Service lookups, 
             // we will rely on the Service to handle the logic or simplify:
-            
+
             // SIMPLIFICATION for this task: Check if status is Pending.
             if (request.Status != "Pending")
             {
                 return BadRequest(new { message = "Only Pending requests can be cancelled." });
             }
-            
+
             // ideally check: if (request.EmployeeId != currentEmployeeId) return Forbid();
         }
 

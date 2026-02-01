@@ -39,7 +39,7 @@ public class RolesController : ControllerBase
     {
         var role = new Role { RoleName = dto.RoleName };
         await _context.Roles.InsertOneAsync(role);
-        
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
@@ -98,7 +98,7 @@ public class DepartmentsController : ControllerBase
     {
         var dept = new Department { DepartmentName = dto.DepartmentName };
         await _context.Departments.InsertOneAsync(dept);
-        
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
@@ -173,7 +173,7 @@ public class LeaveTypesController : ControllerBase
     {
         var type = new LeaveType { TypeName = dto.TypeName, Description = dto.Description };
         await _context.LeaveTypes.InsertOneAsync(type);
-        
+
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
@@ -189,7 +189,7 @@ public class LeaveTypesController : ControllerBase
         var update = Builders<LeaveType>.Update
             .Set(t => t.TypeName, dto.TypeName)
             .Set(t => t.Description, dto.Description);
-            
+
         var result = await _context.LeaveTypes.UpdateOneAsync(t => t.Id == id, update);
         if (result.MatchedCount == 0) return NotFound();
 
