@@ -175,7 +175,7 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
     app.UseHttpMetrics(); // Prometheus HTTP metrics
     app.MapControllers();
     app.MapMetrics(); // Expose /metrics endpoint
-    app.MapHub<NotificationHub>("/notificationHub");
+    app.MapHub<NotificationHub>("/api/notificationHub");
 
 
     // Root endpoint
