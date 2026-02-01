@@ -14,6 +14,13 @@ public class UserCreateDto
 
     [Required]
     public string RoleId { get; set; } = null!;
+
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public int? AnnualLeaveQuota { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? DepartmentId { get; set; }
 }
 
 public class UserUpdateDto
@@ -32,6 +39,9 @@ public class UserUpdateDto
     public string? Phone { get; set; }
     
     public int? AnnualLeaveQuota { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? DepartmentId { get; set; }
 }
 
 public class UserResponseDto
@@ -47,5 +57,9 @@ public class UserResponseDto
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public int? AnnualLeaveQuota { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
     // -----------------------------------------------------
 }

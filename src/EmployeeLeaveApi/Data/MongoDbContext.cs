@@ -32,6 +32,7 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<LeaveBalance> LeaveBalances => _database.GetCollection<LeaveBalance>("leaveBalances");
     public IMongoCollection<LeaveAttachment> LeaveAttachments => _database.GetCollection<LeaveAttachment>("leaveAttachments");
     public IMongoCollection<DeviceToken> DeviceTokens => _database.GetCollection<DeviceToken>("deviceTokens");
+    public IMongoCollection<ActivityLog> ActivityLogs => _database.GetCollection<ActivityLog>("activityLogs");
 
 
     public async Task<bool> TestConnectionAsync()

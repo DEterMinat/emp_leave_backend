@@ -11,10 +11,12 @@ namespace EmployeeLeaveApi.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IActivityLogService _logService;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IActivityLogService logService)
     {
         _userService = userService;
+        _logService = logService;
     }
 
     [HttpGet]
@@ -51,6 +53,13 @@ public class UsersController : ControllerBase
             return BadRequest(new { message = "Username already exists" });
         
         var user = await _userService.CreateAsync(dto);
+        
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "CREATE_USER", "User", user.Id, $"Created user {user.Username} with role {user.RoleName}");
+        }
+
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
     }
 
@@ -74,6 +83,11 @@ public class UsersController : ControllerBase
         var updatedUser = await _userService.UpdateAsync(id, dto);
         if (updatedUser == null) return NotFound();
         
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "UPDATE_USER", "User", id, $"Updated user {updatedUser.Username}");
+        }
+        
         return Ok(updatedUser);
     }
 
@@ -83,6 +97,13 @@ public class UsersController : ControllerBase
     {
         var deleted = await _userService.DeleteAsync(id);
         if (!deleted) return NotFound();
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "DELETE_USER", "User", id, $"Deleted user ID: {id}");
+        }
+
         return Ok(new { message = "User deleted" });
     }
 }

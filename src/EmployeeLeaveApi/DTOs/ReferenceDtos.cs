@@ -28,6 +28,12 @@ public class DepartmentCreateDto
     public string DepartmentName { get; set; } = null!;
 }
 
+public class DepartmentUpdateDto
+{
+    [Required]
+    public string DepartmentName { get; set; } = null!;
+}
+
 // ==================== LeaveType DTOs ====================
 public class LeaveTypeDto
 {
@@ -37,6 +43,13 @@ public class LeaveTypeDto
 }
 
 public class LeaveTypeCreateDto
+{
+    [Required]
+    public string TypeName { get; set; } = null!;
+    public string? Description { get; set; }
+}
+
+public class LeaveTypeUpdateDto
 {
     [Required]
     public string TypeName { get; set; } = null!;

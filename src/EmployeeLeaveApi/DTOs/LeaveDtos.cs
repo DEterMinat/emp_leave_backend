@@ -22,6 +22,7 @@ public class LeaveRequestDto
     public string? EmployeeName { get; set; }
     public string? LeaveTypeName { get; set; }
     public string? ApproverName { get; set; }
+    public bool HasAttachments { get; set; }
 }
 
 public class LeaveRequestCreateDto

@@ -45,10 +45,64 @@ public class UserService : IUserService
             Username = dto.Username,
             Password = hashedPassword,
             RoleId = dto.RoleId,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            AnnualLeaveQuota = dto.AnnualLeaveQuota,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            DepartmentId = dto.DepartmentId,
             CreatedAt = DateTime.UtcNow
         };
         
         await _context.Users.InsertOneAsync(user);
+
+        // --- One-Stop Setup: Create Employee Profile & Initialize Balances ---
+        if (!string.IsNullOrEmpty(dto.DepartmentId))
+        {
+            var employee = new Employee
+            {
+                UserId = user.Id!,
+                DepartmentId = dto.DepartmentId,
+                FirstName = dto.FirstName ?? user.Username,
+                LastName = dto.LastName ?? "",
+                Email = dto.Email ?? "",
+                Phone = dto.Phone,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.Employees.InsertOneAsync(employee);
+
+            // Initialize Leave Balances
+            var leaveTypes = await _context.LeaveTypes.Find(_ => true).ToListAsync();
+            var year = DateTime.UtcNow.Year;
+            var defaultDays = new Dictionary<string, int>
+            {
+                { "Annual Leave", dto.AnnualLeaveQuota ?? 10 },
+                { "Sick Leave", 30 },
+                { "Personal Leave", 3 }
+            };
+
+            foreach (var type in leaveTypes)
+            {
+                var totalDays = defaultDays.ContainsKey(type.TypeName) 
+                    ? defaultDays[type.TypeName] 
+                    : (type.TypeName.Contains("Annual") ? (dto.AnnualLeaveQuota ?? 10) : 10);
+
+                var balance = new LeaveBalance
+                {
+                    EmployeeId = user.Id!, // Note: Some parts of the system use UserId as EmployeeId, others use MongoDB's Employee.Id. 
+                                          // Looking at LeaveBalancesController, it uses 'EmployeeId'. 
+                                          // But in Dashboard, it queries by UserId. 
+                                          // I will stick to UserId for now as it's the current pattern in LeaveBalancesController.mine
+                    LeaveTypeId = type.Id!,
+                    Year = year,
+                    TotalDays = totalDays,
+                    UsedDays = 0,
+                    RemainingDays = totalDays
+                };
+                await _context.LeaveBalances.InsertOneAsync(balance);
+            }
+        }
+        // ------------------------------------------------------------------
         
         // Ensure to return DTO with RoleName
         return await MapToDto(user);
@@ -72,6 +126,9 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(dto.Email)) update = update.Set(u => u.Email, dto.Email);
         if (!string.IsNullOrEmpty(dto.Phone)) update = update.Set(u => u.Phone, dto.Phone);
         if (dto.AnnualLeaveQuota.HasValue) update = update.Set(u => u.AnnualLeaveQuota, dto.AnnualLeaveQuota.Value);
+        if (!string.IsNullOrEmpty(dto.FirstName)) update = update.Set(u => u.FirstName, dto.FirstName);
+        if (!string.IsNullOrEmpty(dto.LastName)) update = update.Set(u => u.LastName, dto.LastName);
+        if (!string.IsNullOrEmpty(dto.DepartmentId)) update = update.Set(u => u.DepartmentId, dto.DepartmentId);
         // ---------------------------------------
         
         var result = await _context.Users.UpdateOneAsync(u => u.Id == id, update);
@@ -105,8 +162,19 @@ public class UserService : IUserService
             // --- เพิ่มการ Map ฟิลด์ใหม่กลับไปยัง DTO ---
             Email = u.Email,
             Phone = u.Phone,
-            AnnualLeaveQuota = u.AnnualLeaveQuota
+            AnnualLeaveQuota = u.AnnualLeaveQuota,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            DepartmentId = u.DepartmentId
             // ---------------------------------------
         };
+
+        if (!string.IsNullOrEmpty(u.DepartmentId))
+        {
+            var dept = await _context.Departments.Find(d => d.Id == u.DepartmentId).FirstOrDefaultAsync();
+            res.DepartmentName = dept?.DepartmentName;
+        }
+
+        return res;
     }
 }

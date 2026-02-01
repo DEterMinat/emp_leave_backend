@@ -11,10 +11,12 @@ namespace EmployeeLeaveApi.Controllers;
 public class LeaveRequestsController : ControllerBase
 {
     private readonly ILeaveService _leaveService;
+    private readonly IActivityLogService _logService;
 
-    public LeaveRequestsController(ILeaveService leaveService)
+    public LeaveRequestsController(ILeaveService leaveService, IActivityLogService logService)
     {
         _leaveService = leaveService;
+        _logService = logService;
     }
 
     [HttpGet]
@@ -53,6 +55,13 @@ public class LeaveRequestsController : ControllerBase
     {
         // Validation should happen in FluentValidation middleware mostly
         var request = await _leaveService.CreateAsync(dto);
+        
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "CREATE_LEAVE", "LeaveRequest", request.Id, $"Created leave request for {request.LeaveTypeName}");
+        }
+
         return CreatedAtAction(nameof(GetById), new { id = request.Id }, request);
     }
 
@@ -76,6 +85,13 @@ public class LeaveRequestsController : ControllerBase
     {
         var request = await _leaveService.ApproveAsync(id, dto);
         if (request == null) return NotFound();
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "APPROVE_LEAVE", "LeaveRequest", id, $"Approved leave for {request.EmployeeName}");
+        }
+
         return Ok(request);
     }
 
@@ -85,6 +101,13 @@ public class LeaveRequestsController : ControllerBase
     {
         var request = await _leaveService.RejectAsync(id, dto);
         if (request == null) return NotFound();
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "REJECT_LEAVE", "LeaveRequest", id, $"Rejected leave for {request.EmployeeName}. Reason: {dto.Comment}");
+        }
+
         return Ok(request);
     }
 
@@ -118,6 +141,13 @@ public class LeaveRequestsController : ControllerBase
 
         var deleted = await _leaveService.DeleteAsync(id);
         if (!deleted) return NotFound();
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId != null)
+        {
+            await _logService.LogAsync(currentUserId, "DELETE_LEAVE", "LeaveRequest", id, $"Deleted leave request ID: {id}");
+        }
+
         return Ok(new { message = "LeaveRequest deleted" });
     }
 

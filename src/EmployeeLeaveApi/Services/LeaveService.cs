@@ -207,6 +207,7 @@ public class LeaveService : ILeaveService
     {
         var emp = await _context.Users.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();
         var type = await _context.LeaveTypes.Find(t => t.Id == r.LeaveTypeId).FirstOrDefaultAsync();
+        var hasAttachments = await _context.LeaveAttachments.Find(a => a.RequestId == r.Id).AnyAsync();
         
         return new LeaveRequestDto
         {
@@ -223,7 +224,8 @@ public class LeaveService : ILeaveService
             ApproverId = r.ApproverId,
             ApprovedDate = r.ApprovedDate,
             EmployeeName = emp != null ? emp.Username : "Unknown User",
-            LeaveTypeName = type?.TypeName
+            LeaveTypeName = type?.TypeName,
+            HasAttachments = hasAttachments
         };
     }
 }

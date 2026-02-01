@@ -9,10 +9,13 @@ services:
     environment:
       - ConnectionStrings__MongoDb=${MONGODB_URL}
       - MongoDB__DatabaseName=${DB_NAME}
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     expose:
       - "8080"
     volumes:
       - backend-uploads:/app/wwwroot/uploads
+    depends_on:
+      - elasticsearch
 
   frontend:
     build:
@@ -20,6 +23,45 @@ services:
       dockerfile: Dockerfile
     expose:
       - "80"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    expose:
+      - "9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./nginx/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    expose:
+      - "9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
   nginx-lb:
     image: nginx:alpine
@@ -34,3 +76,4 @@ services:
 
 volumes:
   backend-uploads:
+  esdata:

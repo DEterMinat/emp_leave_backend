@@ -14,4 +14,9 @@ public class NotificationHub : Hub
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
     }
+    
+    public async Task JoinGroup(string groupName)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+    }
 }

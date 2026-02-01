@@ -28,6 +28,16 @@ public class User
 
     [BsonElement("annualLeaveQuota")]
     public int? AnnualLeaveQuota { get; set; }
+
+    [BsonElement("firstName")]
+    public string? FirstName { get; set; }
+
+    [BsonElement("lastName")]
+    public string? LastName { get; set; }
+
+    [BsonElement("departmentId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? DepartmentId { get; set; }
     // -----------------------------------------------------------
 
     [BsonElement("createdAt")]

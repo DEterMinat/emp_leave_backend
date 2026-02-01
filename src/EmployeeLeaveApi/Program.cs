@@ -22,6 +22,13 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/log-.txt", 
         rollingInterval: RollingInterval.Day,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Conditional(
+        _ => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ELASTICSEARCH_URL")),
+        wt => wt.Elasticsearch(new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions(new Uri(Environment.GetEnvironmentVariable("ELASTICSEARCH_URL") ?? "http://elasticsearch:9200"))
+        {
+            AutoRegisterTemplate = true,
+            IndexFormat = "employee-leave-api-logs-{0:yyyy.MM.dd}"
+        }))
     .CreateLogger();
 
 try
@@ -82,6 +89,7 @@ try
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILeaveService, LeaveService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
     // JWT Helper
     builder.Services.AddSingleton<JwtHelper>();
@@ -164,7 +172,9 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
     app.UseStaticFiles(); // Enable serving static files (uploads)
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseHttpMetrics(); // Prometheus HTTP metrics
     app.MapControllers();
+    app.MapMetrics(); // Expose /metrics endpoint
     app.MapHub<NotificationHub>("/notificationHub");
 
 
