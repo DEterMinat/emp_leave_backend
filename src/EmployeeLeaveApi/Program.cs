@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using EmployeeLeaveApi.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Prometheus;
 
 
 Log.Logger = new LoggerConfiguration()

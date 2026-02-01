@@ -151,7 +151,7 @@ public class UserService : IUserService
     private async Task<UserResponseDto> MapToDto(User u)
     {
         var role = await _context.Roles.Find(r => r.Id == u.RoleId).FirstOrDefaultAsync();
-        return new UserResponseDto
+        var res = new UserResponseDto
         {
             Id = u.Id!,
             Username = u.Username,

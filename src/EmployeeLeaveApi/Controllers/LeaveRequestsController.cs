@@ -141,8 +141,6 @@ public class LeaveRequestsController : ControllerBase
 
         var deleted = await _leaveService.DeleteAsync(id);
         if (!deleted) return NotFound();
-
-        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (currentUserId != null)
         {
             await _logService.LogAsync(currentUserId, "DELETE_LEAVE", "LeaveRequest", id, $"Deleted leave request ID: {id}");
