@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using EmployeeLeaveApi.Data;
@@ -47,6 +48,29 @@ public class LeaveBalancesController : ControllerBase
             dtos.Add(MapToDto(b, type));
         }
         
+        return Ok(dtos);
+    }
+
+    [HttpGet("mine")]
+    [Authorize]
+    public async Task<ActionResult<List<LeaveBalanceDto>>> GetMine()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        // Need to find EmployeeId for this User
+        var user = await _context.Users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+        if (user == null) return NotFound("User not found");
+
+        var balances = await _context.LeaveBalances.Find(b => b.EmployeeId == user.Id).ToListAsync();
+        var dtos = new List<LeaveBalanceDto>();
+
+        foreach (var b in balances)
+        {
+            var type = await _context.LeaveTypes.Find(t => t.Id == b.LeaveTypeId).FirstOrDefaultAsync();
+            dtos.Add(MapToDto(b, type));
+        }
+
         return Ok(dtos);
     }
 

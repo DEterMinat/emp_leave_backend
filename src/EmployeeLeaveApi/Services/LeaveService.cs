@@ -190,6 +190,19 @@ public class LeaveService : ILeaveService
         return result.DeletedCount > 0;
     }
 
+    public async Task<List<LeaveAttachmentDto>> GetAttachmentsAsync(string requestId)
+    {
+        var attachments = await _context.LeaveAttachments.Find(a => a.RequestId == requestId).ToListAsync();
+        return attachments.Select(a => new LeaveAttachmentDto
+        {
+            Id = a.Id!,
+            RequestId = a.RequestId,
+            FileName = a.FileName,
+            FilePath = a.FilePath,
+            UploadedDate = a.UploadedDate
+        }).ToList();
+    }
+
     private async Task<LeaveRequestDto> MapToDto(LeaveRequest r)
     {
         var emp = await _context.Users.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();

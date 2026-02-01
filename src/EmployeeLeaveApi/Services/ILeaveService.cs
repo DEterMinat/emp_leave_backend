@@ -13,4 +13,5 @@ public interface ILeaveService
     Task<LeaveRequestDto?> ApproveAsync(string id, LeaveRequestUpdateDto dto);
     Task<LeaveRequestDto?> RejectAsync(string id, LeaveRequestUpdateDto dto);
     Task<bool> DeleteAsync(string id);
+    Task<List<LeaveAttachmentDto>> GetAttachmentsAsync(string requestId);
 }

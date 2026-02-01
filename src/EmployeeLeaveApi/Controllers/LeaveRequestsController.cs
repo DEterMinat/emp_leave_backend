@@ -120,4 +120,11 @@ public class LeaveRequestsController : ControllerBase
         if (!deleted) return NotFound();
         return Ok(new { message = "LeaveRequest deleted" });
     }
+
+    [HttpGet("{id}/attachments")]
+    public async Task<ActionResult<List<LeaveAttachmentDto>>> GetAttachments(string id)
+    {
+        var attachments = await _leaveService.GetAttachmentsAsync(id);
+        return Ok(attachments);
+    }
 }
