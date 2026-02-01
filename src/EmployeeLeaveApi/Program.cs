@@ -113,7 +113,7 @@ builder.Services.AddScoped<ILeaveService, LeaveService>();
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500", "http://localhost:8080") // Add your frontend origins
+            policy.SetIsOriginAllowed(origin => true) // Allow any origin in dev
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials(); // Required for SignalR
