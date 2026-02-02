@@ -12,11 +12,13 @@ public class LeaveService : ILeaveService
 {
     private readonly IMongoDbContext _context;
     private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly INotificationService _notificationService;
 
-    public LeaveService(IMongoDbContext context, IHubContext<NotificationHub> hubContext)
+    public LeaveService(IMongoDbContext context, IHubContext<NotificationHub> hubContext, INotificationService notificationService)
     {
         _context = context;
         _hubContext = hubContext;
+        _notificationService = notificationService;
     }
 
 
@@ -154,6 +156,9 @@ public class LeaveService : ILeaveService
             // Send real-time notification to the employee
             await _hubContext.Clients.Group(updatedRequest.EmployeeId)
                 .SendAsync("ReceiveNotification", "Leave Approved", $"Your leave request for {updatedRequest.LeaveTypeName} has been Approved.");
+
+            // Send Push Notification
+            await _notificationService.SendNotificationAsync(updatedRequest.EmployeeId, "Leave Approved", $"Your leave request for {updatedRequest.LeaveTypeName} has been Approved.");
         }
 
         return updatedRequest;
@@ -178,6 +183,9 @@ public class LeaveService : ILeaveService
             // Send real-time notification to the employee
             await _hubContext.Clients.Group(updatedRequest.EmployeeId)
                 .SendAsync("ReceiveNotification", "Leave Rejected", $"Your leave request for {updatedRequest.LeaveTypeName} has been Rejected.");
+
+            // Send Push Notification
+            await _notificationService.SendNotificationAsync(updatedRequest.EmployeeId, "Leave Rejected", $"Your leave request for {updatedRequest.LeaveTypeName} has been Rejected.");
         }
 
         return updatedRequest;
