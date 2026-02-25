@@ -35,6 +35,8 @@ public class EmployeesController : ControllerBase
                 Email = e.Email,
                 Phone = e.Phone,
                 Address = e.Address,
+                Position = e.Position,
+                Salary = e.Salary,
                 CreatedAt = e.CreatedAt,
                 DepartmentName = dept?.DepartmentName,
                 Username = user?.Username
@@ -63,6 +65,8 @@ public class EmployeesController : ControllerBase
             Email = e.Email,
             Phone = e.Phone,
             Address = e.Address,
+            Position = e.Position,
+            Salary = e.Salary,
             CreatedAt = e.CreatedAt,
             DepartmentName = dept?.DepartmentName,
             Username = user?.Username
@@ -88,6 +92,8 @@ public class EmployeesController : ControllerBase
             Email = e.Email,
             Phone = e.Phone,
             Address = e.Address,
+            Position = e.Position,
+            Salary = e.Salary,
             CreatedAt = e.CreatedAt,
             DepartmentName = dept?.DepartmentName,
             Username = user?.Username
@@ -106,6 +112,8 @@ public class EmployeesController : ControllerBase
             Email = dto.Email,
             Phone = dto.Phone,
             Address = dto.Address,
+            Position = dto.Position,
+            Salary = dto.Salary,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -121,6 +129,8 @@ public class EmployeesController : ControllerBase
                 Email = employee.Email,
                 Phone = employee.Phone,
                 Address = employee.Address,
+                Position = employee.Position,
+                Salary = employee.Salary,
                 CreatedAt = employee.CreatedAt
             });
     }
@@ -136,6 +146,8 @@ public class EmployeesController : ControllerBase
         if (!string.IsNullOrEmpty(dto.Email)) update = update.Set(e => e.Email, dto.Email);
         if (dto.Phone != null) update = update.Set(e => e.Phone, dto.Phone);
         if (dto.Address != null) update = update.Set(e => e.Address, dto.Address);
+        if (dto.Position != null) update = update.Set(e => e.Position, dto.Position);
+        if (dto.Salary.HasValue) update = update.Set(e => e.Salary, dto.Salary.Value);
 
         var result = await _context.Employees.UpdateOneAsync(e => e.Id == id, update);
         if (result.MatchedCount == 0) return NotFound();

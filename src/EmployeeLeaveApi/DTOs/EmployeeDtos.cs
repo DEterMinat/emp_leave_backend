@@ -13,6 +13,8 @@ public class EmployeeDto
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
     public string? Address { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Populated fields
@@ -40,6 +42,8 @@ public class EmployeeCreateDto
 
     public string? Phone { get; set; }
     public string? Address { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
 }
 
 public class EmployeeUpdateDto
@@ -51,4 +55,6 @@ public class EmployeeUpdateDto
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
 }

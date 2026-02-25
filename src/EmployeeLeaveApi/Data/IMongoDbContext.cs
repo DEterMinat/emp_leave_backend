@@ -15,5 +15,6 @@ public interface IMongoDbContext
     IMongoCollection<LeaveAttachment> LeaveAttachments { get; }
     IMongoCollection<DeviceToken> DeviceTokens { get; }
     IMongoCollection<ActivityLog> ActivityLogs { get; }
+    IMongoCollection<Attendance> Attendances { get; }
     Task<bool> TestConnectionAsync();
 }

@@ -33,7 +33,7 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<LeaveAttachment> LeaveAttachments => _database.GetCollection<LeaveAttachment>("leaveAttachments");
     public IMongoCollection<DeviceToken> DeviceTokens => _database.GetCollection<DeviceToken>("deviceTokens");
     public IMongoCollection<ActivityLog> ActivityLogs => _database.GetCollection<ActivityLog>("activityLogs");
-
+    public IMongoCollection<Attendance> Attendances => _database.GetCollection<Attendance>("attendances");
 
     public async Task<bool> TestConnectionAsync()
     {

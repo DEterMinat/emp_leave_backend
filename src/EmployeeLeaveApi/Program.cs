@@ -92,6 +92,7 @@ try
     builder.Services.AddScoped<ILeaveService, LeaveService>();
     builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
+    builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 
     // JWT Helper
     builder.Services.AddSingleton<JwtHelper>();

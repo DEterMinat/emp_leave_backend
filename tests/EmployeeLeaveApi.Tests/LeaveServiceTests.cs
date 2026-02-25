@@ -19,6 +19,7 @@ public class LeaveServiceTests
     private readonly Mock<IMongoCollection<LeaveBalance>> _mockLeaveBalances;
     private readonly Mock<IMongoCollection<User>> _mockUsers;
     private readonly Mock<IMongoCollection<LeaveType>> _mockLeaveTypes;
+    private readonly Mock<INotificationService> _mockNotificationService;
     private readonly LeaveService _service;
 
     public LeaveServiceTests()
@@ -29,13 +30,14 @@ public class LeaveServiceTests
         _mockLeaveBalances = new Mock<IMongoCollection<LeaveBalance>>();
         _mockUsers = new Mock<IMongoCollection<User>>();
         _mockLeaveTypes = new Mock<IMongoCollection<LeaveType>>();
+        _mockNotificationService = new Mock<INotificationService>();
 
         _mockContext.Setup(c => c.LeaveRequests).Returns(_mockLeaveRequests.Object);
         _mockContext.Setup(c => c.LeaveBalances).Returns(_mockLeaveBalances.Object);
         _mockContext.Setup(c => c.Users).Returns(_mockUsers.Object);
         _mockContext.Setup(c => c.LeaveTypes).Returns(_mockLeaveTypes.Object);
 
-        _service = new LeaveService(_mockContext.Object, _mockHubContext.Object);
+        _service = new LeaveService(_mockContext.Object, _mockHubContext.Object, _mockNotificationService.Object);
     }
 
     [Fact]

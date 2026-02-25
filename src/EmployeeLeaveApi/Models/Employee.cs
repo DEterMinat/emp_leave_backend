@@ -35,6 +35,12 @@ public class Employee
     [BsonElement("address")]
     public string? Address { get; set; }
 
+    [BsonElement("position")]
+    public string? Position { get; set; }
+
+    [BsonElement("salary")]
+    public decimal? Salary { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
