@@ -36,7 +36,7 @@ public class JwtHelper
 
         if (!string.IsNullOrEmpty(roleName))
         {
-            claims.Add(new Claim(ClaimTypes.Role, roleName));
+            claims.Add(new Claim(ClaimTypes.Role, roleName.ToLower()));
         }
 
         var token = new JwtSecurityToken(
