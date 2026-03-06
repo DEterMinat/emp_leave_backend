@@ -8,63 +8,86 @@ ASP.NET Core 8 Web API for Employee Leave Management System with real-time notif
 
 ## ✨ Features
 
-- 🔐 **JWT Authentication** - Secure role-based access (Employee, Manager, HR)
-- 📊 **Leave Management** - Request, approve, reject leave with balance tracking
-- 🔔 **Real-time Notifications** - SignalR for instant updates
-- 📎 **File Uploads** - Attach documents to leave requests
-- 🐳 **Docker Ready** - Containerized deployment with Nginx load balancing
-- 🧪 **Unit Tested** - xUnit tests with Moq mocking
+- 🔐 JWT authentication + role-based authorization (Employee, Manager, HR, Admin)
+- 📊 Leave requests, approval/rejection, leave balance tracking
+- 🔔 SignalR real-time notifications
+- 📎 Attachment upload for leave requests
+- 📈 Prometheus metrics (`/metrics`)
+- 🧪 Unit tests with xUnit + Moq
 
 ## 📁 Project Structure
 
-```
+```text
 emp_leave_backend/
-├── EmployeeLeaveApp.sln          # Solution file
-├── Dockerfile                    # Multi-stage build
-├── docker-compose.yml            # Full stack orchestration
-├── src/
-│   └── EmployeeLeaveApi/         # Main API project
-│       ├── Controllers/          # API endpoints
-│       ├── Services/             # Business logic
-│       ├── Models/               # MongoDB documents
-│       ├── DTOs/                 # Request/Response DTOs
-│       ├── Hubs/                 # SignalR hubs
-│       ├── Data/                 # MongoDB context
-│       └── Program.cs            # Entry point
-└── tests/
-    └── EmployeeLeaveApi.Tests/   # xUnit tests
+├── EmployeeLeaveApp.sln
+├── docker-compose.yml
+├── Dockerfile
+├── src/EmployeeLeaveApi/
+│   ├── Controllers/
+│   ├── Services/
+│   ├── Models/
+│   ├── DTOs/
+│   ├── Data/
+│   ├── Hubs/
+│   ├── Validators/
+│   └── Program.cs
+└── tests/EmployeeLeaveApi.Tests/
 ```
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local)
 
 ### Prerequisites
 
 - .NET 8 SDK
 - MongoDB (local or Atlas)
 
-### Run Locally
+### Option A: Run from `emp_leave_backend`
 
 ```bash
-# Navigate to project
 cd emp_leave_backend
-
-# Restore & Run
 dotnet restore EmployeeLeaveApp.sln
 dotnet run --project src/EmployeeLeaveApi
 ```
 
-### Run with Docker
+### Option B: Run from workspace root
 
 ```bash
-# Create .env file
+dotnet run --project emp_leave_backend/src/EmployeeLeaveApi
+```
+
+### Local URLs (Development)
+
+> Current launch profile uses port **5082** (`launchSettings.json`).
+
+- API Base: http://localhost:5082
+- Swagger UI: http://localhost:5082/docs
+- Health: http://localhost:5082/health
+- Metrics: http://localhost:5082/metrics
+
+## 🐳 Run with Docker
+
+Create `.env` in `emp_leave_backend`:
+
+```bash
 echo "MONGODB_URL=mongodb+srv://..." > .env
 echo "DB_NAME=emp-leave" >> .env
+```
 
-# Start all services
+Start services:
+
+```bash
 docker-compose up --build
 ```
 
-## 🔌 API Endpoints
+Docker access:
+
+- Entry point (Nginx LB): http://localhost:8080
+- Backend API via proxy: `http://localhost:8080/api/...`
+
+> Note: Current Nginx config only proxies `/api/*`.
+> Paths like `/health` and `/docs` are not exposed through `:8080` by default.
+
+## 🔌 Main API Endpoints
 
 ### Authentication
 
@@ -86,37 +109,28 @@ docker-compose up --build
 ### Users
 
 | Method | Endpoint          | Description    |
-| ------ | ----------------- | -------------- |   
+| ------ | ----------------- | -------------- |
 | GET    | `/api/users`      | List all users |
 | GET    | `/api/users/{id}` | Get user by ID |
 | PUT    | `/api/users/{id}` | Update user    |
 
-## 📚 Documentation
+### Database Utilities
 
-- **Swagger UI**: http://localhost:8080/docs
-- **Health Check**: http://localhost:8080/health
+| Method | Endpoint                              | Description                          |
+| ------ | ------------------------------------- | ------------------------------------ |
+| GET    | `/api/DatabaseCheck/status`           | Check collection/data readiness      |
+| POST   | `/api/DatabaseCheck/seed-master-data` | Seed role/department/user/masterdata |
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
 dotnet test EmployeeLeaveApp.sln
-
-# With coverage
 dotnet test --collect:"XPlat Code Coverage"
 ```
 
 ## ⚙️ Configuration
 
-### Environment Variables
-
-| Variable      | Description               | Example             |
-| ------------- | ------------------------- | ------------------- |
-| `MONGODB_URL` | MongoDB connection string | `mongodb+srv://...` |
-| `DB_NAME`     | Database name             | `emp-leave`         |
-| `JWT_SECRET`  | JWT signing key           | `your-secret-key`   |
-
-### appsettings.json
+`appsettings.json` (example):
 
 ```json
 {
@@ -124,26 +138,56 @@ dotnet test --collect:"XPlat Code Coverage"
     "ConnectionString": "mongodb+srv://...",
     "DatabaseName": "emp-leave"
   },
-  "JWT": {
+  "Jwt": {
     "Secret": "your-jwt-secret",
-    "ExpirationMinutes": 60
+    "Issuer": "EmployeeLeaveApi",
+    "ExpirationHours": "24"
   }
 }
 ```
 
-## 🐳 Docker Architecture
+Common environment variables:
 
+| Variable                         | Description                          |
+| -------------------------------- | ------------------------------------ |
+| `MongoDB__ConnectionString`      | MongoDB connection string            |
+| `MongoDB__DatabaseName`          | MongoDB database name                |
+| `ConnectionStrings__MongoDB`     | Alternative key used by .NET config  |
+| `Jwt__Secret`                    | JWT secret key                       |
+| `Jwt__Issuer`                    | JWT issuer/audience                  |
+| `ELASTICSEARCH_URL`              | Optional Elasticsearch endpoint      |
+
+## 🛠️ Troubleshooting
+
+### 1) `MSB3021/MSB3027` file locked (`EmployeeLeaveApi.exe is being used by another process`)
+
+Cause: API is already running and you run `dotnet run` again.
+
+Fix:
+
+```powershell
+Get-Process EmployeeLeaveApi -ErrorAction SilentlyContinue | Stop-Process -Force
+dotnet run --project src/EmployeeLeaveApi
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Nginx     │────▶│   Backend   │────▶│   MongoDB   │
-│   :8080     │     │   :8080     │     │   Atlas     │
-└─────────────┘     └─────────────┘     └─────────────┘
-       │
-       ▼
-┌─────────────┐
-│  Frontend   │
-│   :80       │
-└─────────────┘
+
+### 2) Port already in use (5082)
+
+```powershell
+Get-NetTCPConnection -LocalPort 5082 -State Listen
+```
+
+If needed, run on another port:
+
+```powershell
+dotnet run --project src/EmployeeLeaveApi --urls "http://localhost:5090"
+```
+
+### 3) Wrong current directory
+
+If you are not in `emp_leave_backend`, use full/relative path from workspace root:
+
+```bash
+dotnet run --project emp_leave_backend/src/EmployeeLeaveApi
 ```
 
 ## 📄 License
