@@ -17,10 +17,16 @@ public class AttendanceService : IAttendanceService
     public async Task<AttendanceDto> CheckInAsync(CheckInDto dto)
     {
         var today = DateTime.UtcNow.Date;
+        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(dto.EmployeeID);
+
+        if (string.IsNullOrEmpty(resolvedEmployeeId))
+        {
+            throw new InvalidOperationException("Employee profile not found for the current user.");
+        }
 
         // Ensure user hasn't already checked in today
         var existing = await _context.Attendances
-            .Find(a => a.EmployeeID == dto.EmployeeID && a.AttendanceDate == today)
+            .Find(a => a.EmployeeID == resolvedEmployeeId && a.AttendanceDate == today)
             .FirstOrDefaultAsync();
 
         if (existing != null)
@@ -30,7 +36,7 @@ public class AttendanceService : IAttendanceService
 
         var attendance = new Attendance
         {
-            EmployeeID = dto.EmployeeID,
+            EmployeeID = resolvedEmployeeId,
             AttendanceDate = today,
             CheckInTime = DateTime.UtcNow,
             Status = "Present", // Can add logic for Late based on time
@@ -46,9 +52,15 @@ public class AttendanceService : IAttendanceService
     public async Task<AttendanceDto> CheckOutAsync(CheckOutDto dto)
     {
         var today = DateTime.UtcNow.Date;
+        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(dto.EmployeeID);
+
+        if (string.IsNullOrEmpty(resolvedEmployeeId))
+        {
+            throw new InvalidOperationException("Employee profile not found for the current user.");
+        }
 
         var existing = await _context.Attendances
-            .Find(a => a.EmployeeID == dto.EmployeeID && a.AttendanceDate == today)
+            .Find(a => a.EmployeeID == resolvedEmployeeId && a.AttendanceDate == today)
             .FirstOrDefaultAsync();
 
         if (existing == null)
@@ -83,8 +95,14 @@ public class AttendanceService : IAttendanceService
 
     public async Task<List<AttendanceDto>> GetHistoryByEmployeeIdAsync(string employeeId, DateTime? startDate = null, DateTime? endDate = null)
     {
+        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(employeeId);
+        if (string.IsNullOrEmpty(resolvedEmployeeId))
+        {
+            return new List<AttendanceDto>();
+        }
+
         var filterBuilder = Builders<Attendance>.Filter;
-        var filter = filterBuilder.Eq(a => a.EmployeeID, employeeId);
+        var filter = filterBuilder.Eq(a => a.EmployeeID, resolvedEmployeeId);
 
         if (startDate.HasValue)
         {
@@ -106,9 +124,15 @@ public class AttendanceService : IAttendanceService
 
     public async Task<AttendanceDto?> GetTodayAttendanceAsync(string employeeId)
     {
+        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(employeeId);
+        if (string.IsNullOrEmpty(resolvedEmployeeId))
+        {
+            return null;
+        }
+
         var today = DateTime.UtcNow.Date;
         var attendance = await _context.Attendances
-            .Find(a => a.EmployeeID == employeeId && a.AttendanceDate == today)
+            .Find(a => a.EmployeeID == resolvedEmployeeId && a.AttendanceDate == today)
             .FirstOrDefaultAsync();
 
         return attendance != null ? MapToDto(attendance) : null;
@@ -128,5 +152,19 @@ public class AttendanceService : IAttendanceService
             CreatedAt = a.CreatedAt,
             UpdatedAt = a.UpdatedAt
         };
+    }
+
+    private async Task<string?> ResolveEmployeeIdOrNullAsync(string? employeeIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(employeeIdentifier))
+        {
+            return null;
+        }
+
+        var employee = await _context.Employees
+            .Find(e => e.Id == employeeIdentifier || e.UserId == employeeIdentifier)
+            .FirstOrDefaultAsync();
+
+        return employee?.Id;
     }
 }
