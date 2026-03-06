@@ -17,7 +17,7 @@ public class AttendanceService : IAttendanceService
     public async Task<AttendanceDto> CheckInAsync(CheckInDto dto)
     {
         var today = DateTime.UtcNow.Date;
-        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(dto.EmployeeID);
+        var resolvedEmployeeId = await ResolveOrCreateEmployeeIdAsync(dto.EmployeeID);
 
         if (string.IsNullOrEmpty(resolvedEmployeeId))
         {
@@ -34,19 +34,23 @@ public class AttendanceService : IAttendanceService
             throw new InvalidOperationException("Already checked in today.");
         }
 
+        var now = DateTime.UtcNow;
+        var status = now.TimeOfDay > new TimeSpan(9, 0, 0) ? "Late" : "Present";
+
         var attendance = new Attendance
         {
             EmployeeID = resolvedEmployeeId,
             AttendanceDate = today,
-            CheckInTime = DateTime.UtcNow,
-            Status = "Present", // Can add logic for Late based on time
+            CheckInTime = now,
+            Status = status,
             Notes = dto.Notes,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         await _context.Attendances.InsertOneAsync(attendance);
+        var employee = await _context.Employees.Find(e => e.Id == resolvedEmployeeId).FirstOrDefaultAsync();
 
-        return MapToDto(attendance);
+        return MapToDto(attendance, employee != null ? $"{employee.FirstName} {employee.LastName}" : null);
     }
 
     public async Task<AttendanceDto> CheckOutAsync(CheckOutDto dto)
@@ -90,7 +94,8 @@ public class AttendanceService : IAttendanceService
             options
         );
 
-        return MapToDto(updated);
+        var employee = await _context.Employees.Find(e => e.Id == resolvedEmployeeId).FirstOrDefaultAsync();
+        return MapToDto(updated, employee != null ? $"{employee.FirstName} {employee.LastName}" : null);
     }
 
     public async Task<List<AttendanceDto>> GetHistoryByEmployeeIdAsync(string employeeId, DateTime? startDate = null, DateTime? endDate = null)
@@ -119,7 +124,10 @@ public class AttendanceService : IAttendanceService
             .SortByDescending(a => a.AttendanceDate)
             .ToListAsync();
 
-        return records.Select(MapToDto).ToList();
+        var employee = await _context.Employees.Find(e => e.Id == resolvedEmployeeId).FirstOrDefaultAsync();
+        var name = employee != null ? $"{employee.FirstName} {employee.LastName}" : null;
+
+        return records.Select(r => MapToDto(r, name)).ToList();
     }
 
     public async Task<AttendanceDto?> GetTodayAttendanceAsync(string employeeId)
@@ -135,15 +143,40 @@ public class AttendanceService : IAttendanceService
             .Find(a => a.EmployeeID == resolvedEmployeeId && a.AttendanceDate == today)
             .FirstOrDefaultAsync();
 
-        return attendance != null ? MapToDto(attendance) : null;
+        if (attendance == null) return null;
+
+        var employee = await _context.Employees.Find(e => e.Id == resolvedEmployeeId).FirstOrDefaultAsync();
+        return MapToDto(attendance, employee != null ? $"{employee.FirstName} {employee.LastName}" : null);
     }
 
-    private static AttendanceDto MapToDto(Attendance a)
+    public async Task<List<AttendanceDto>> GetAllAttendanceAsync(DateTime? date = null)
+    {
+        var targetDate = date?.Date ?? DateTime.UtcNow.Date;
+        var filter = Builders<Attendance>.Filter.Eq(a => a.AttendanceDate, targetDate);
+        
+        var records = await _context.Attendances
+            .Find(filter)
+            .ToListAsync();
+
+        if (!records.Any()) return new List<AttendanceDto>();
+
+        var employeeIds = records.Select(r => r.EmployeeID).Distinct().ToList();
+        var employees = await _context.Employees
+            .Find(Builders<Employee>.Filter.In(e => e.Id, employeeIds))
+            .ToListAsync();
+
+        var employeeMap = employees.ToDictionary(e => e.Id!, e => $"{e.FirstName} {e.LastName}");
+
+        return records.Select(r => MapToDto(r, employeeMap.GetValueOrDefault(r.EmployeeID))).ToList();
+    }
+
+    private AttendanceDto MapToDto(Attendance a, string? employeeName = null)
     {
         return new AttendanceDto
         {
             AttendanceID = a.AttendanceID!,
             EmployeeID = a.EmployeeID,
+            EmployeeName = employeeName,
             AttendanceDate = a.AttendanceDate,
             CheckInTime = a.CheckInTime,
             CheckOutTime = a.CheckOutTime,
@@ -166,5 +199,100 @@ public class AttendanceService : IAttendanceService
             .FirstOrDefaultAsync();
 
         return employee?.Id;
+    }
+
+    private async Task<string?> ResolveOrCreateEmployeeIdAsync(string? employeeIdentifier)
+    {
+        var resolvedEmployeeId = await ResolveEmployeeIdOrNullAsync(employeeIdentifier);
+        if (!string.IsNullOrEmpty(resolvedEmployeeId))
+        {
+            return resolvedEmployeeId;
+        }
+
+        return await CreateEmployeeFromUserIdentifierAsync(employeeIdentifier);
+    }
+
+    private async Task<string?> CreateEmployeeFromUserIdentifierAsync(string? employeeIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(employeeIdentifier))
+        {
+            return null;
+        }
+
+        var user = await _context.Users
+            .Find(u => u.Id == employeeIdentifier)
+            .FirstOrDefaultAsync();
+
+        if (user == null || string.IsNullOrEmpty(user.Id))
+        {
+            return null;
+        }
+
+        var departmentId = await EnsureDepartmentIdAsync(user.DepartmentId);
+        var firstName = string.IsNullOrWhiteSpace(user.FirstName) ? user.Username : user.FirstName;
+        var email = string.IsNullOrWhiteSpace(user.Email) ? $"{user.Username}@company.local" : user.Email;
+
+        var newEmployee = new Employee
+        {
+            UserId = user.Id,
+            DepartmentId = departmentId,
+            FirstName = firstName,
+            LastName = string.IsNullOrWhiteSpace(user.LastName) ? "User" : user.LastName,
+            Email = email,
+            Phone = user.Phone,
+            Position = "Employee",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _context.Employees.InsertOneAsync(newEmployee);
+        if (!string.IsNullOrEmpty(newEmployee.Id))
+        {
+            return newEmployee.Id;
+        }
+
+        var createdEmployee = await _context.Employees
+            .Find(e => e.UserId == user.Id)
+            .SortByDescending(e => e.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        return createdEmployee?.Id;
+    }
+
+    private async Task<string> EnsureDepartmentIdAsync(string? preferredDepartmentId)
+    {
+        if (!string.IsNullOrWhiteSpace(preferredDepartmentId))
+        {
+            var preferredDepartment = await _context.Departments
+                .Find(d => d.Id == preferredDepartmentId)
+                .FirstOrDefaultAsync();
+
+            if (preferredDepartment != null && !string.IsNullOrEmpty(preferredDepartment.Id))
+            {
+                return preferredDepartment.Id;
+            }
+        }
+
+        var firstDepartment = await _context.Departments
+            .Find(_ => true)
+            .FirstOrDefaultAsync();
+
+        if (firstDepartment != null && !string.IsNullOrEmpty(firstDepartment.Id))
+        {
+            return firstDepartment.Id;
+        }
+
+        var generalDepartment = new Department
+        {
+            DepartmentName = "General"
+        };
+
+        await _context.Departments.InsertOneAsync(generalDepartment);
+
+        if (string.IsNullOrEmpty(generalDepartment.Id))
+        {
+            throw new InvalidOperationException("Failed to create default department.");
+        }
+
+        return generalDepartment.Id;
     }
 }

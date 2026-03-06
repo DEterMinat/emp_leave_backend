@@ -10,6 +10,7 @@ ASP.NET Core 8 Web API for Employee Leave Management System with real-time notif
 
 - 🔐 JWT authentication + role-based authorization (Employee, Manager, HR, Admin)
 - 📊 Leave requests, approval/rejection, leave balance tracking
+- 🕒 **Attendance Tracking** - Automatic "Late" detection (after 09:00 AM)
 - 🔔 SignalR real-time notifications
 - 📎 Attachment upload for leave requests
 - 📈 Prometheus metrics (`/metrics`)
@@ -112,7 +113,17 @@ Docker access:
 | ------ | ----------------- | -------------- |
 | GET    | `/api/users`      | List all users |
 | GET    | `/api/users/{id}` | Get user by ID |
-| PUT    | `/api/users/{id}` | Update user    |
+| PUT    | `/api/users/{id}` | Update user (Position, Salary, etc.) |
+
+### Attendance
+
+| Method | Endpoint                    | Description                     |
+| ------ | --------------------------- | ------------------------------- |
+| POST   | `/api/attendance/check-in`  | Check in (Auto-Late detection)  |
+| POST   | `/api/attendance/check-out` | Check out                       |
+| GET    | `/api/attendance/today`     | Get today's record for current  |
+| GET    | `/api/attendance/history`   | Get history for current user    |
+| GET    | `/api/attendance/all`       | List all records (Admin/HR only)|
 
 ### Database Utilities
 

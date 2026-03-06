@@ -6,6 +6,7 @@ public class AttendanceDto
 {
     public string AttendanceID { get; set; } = null!;
     public string EmployeeID { get; set; } = null!;
+    public string? EmployeeName { get; set; }
     public DateTime AttendanceDate { get; set; }
     public DateTime? CheckInTime { get; set; }
     public DateTime? CheckOutTime { get; set; }

@@ -64,4 +64,13 @@ public class AttendanceController : ControllerBase
         var result = await _attendanceService.GetHistoryByEmployeeIdAsync(employeeId, startDate, endDate);
         return Ok(result);
     }
+
+    // GET /api/attendance/all
+    [HttpGet("all")]
+    [Authorize(Roles = "hr,manager,admin")]
+    public async Task<ActionResult<List<AttendanceDto>>> GetAll([FromQuery] DateTime? date)
+    {
+        var result = await _attendanceService.GetAllAttendanceAsync(date);
+        return Ok(result);
+    }
 }
