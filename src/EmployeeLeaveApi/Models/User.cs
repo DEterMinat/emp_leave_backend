@@ -38,6 +38,15 @@ public class User
     [BsonElement("departmentId")]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? DepartmentId { get; set; }
+
+    [BsonElement("position")]
+    public string? Position { get; set; }
+
+    [BsonElement("salary")]
+    public decimal? Salary { get; set; }
+
+    [BsonElement("address")]
+    public string? Address { get; set; }
     // -----------------------------------------------------------
 
     [BsonElement("createdAt")]

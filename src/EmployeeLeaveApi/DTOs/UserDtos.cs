@@ -21,6 +21,9 @@ public class UserCreateDto
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? DepartmentId { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
+    public string? Address { get; set; }
 }
 
 public class UserUpdateDto
@@ -42,6 +45,9 @@ public class UserUpdateDto
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? DepartmentId { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
+    public string? Address { get; set; }
 }
 
 public class UserResponseDto
@@ -61,5 +67,8 @@ public class UserResponseDto
     public string? LastName { get; set; }
     public string? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
+    public string? Address { get; set; }
     // -----------------------------------------------------
 }

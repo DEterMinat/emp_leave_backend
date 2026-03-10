@@ -51,6 +51,9 @@ public class UserService : IUserService
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             DepartmentId = dto.DepartmentId,
+            Position = dto.Position,
+            Salary = dto.Salary,
+            Address = dto.Address,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -67,6 +70,9 @@ public class UserService : IUserService
                 LastName = dto.LastName ?? "",
                 Email = dto.Email ?? "",
                 Phone = dto.Phone,
+                Position = dto.Position,
+                Salary = dto.Salary,
+                Address = dto.Address,
                 CreatedAt = DateTime.UtcNow
             };
             await _context.Employees.InsertOneAsync(employee);
@@ -129,10 +135,31 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(dto.FirstName)) update = update.Set(u => u.FirstName, dto.FirstName);
         if (!string.IsNullOrEmpty(dto.LastName)) update = update.Set(u => u.LastName, dto.LastName);
         if (!string.IsNullOrEmpty(dto.DepartmentId)) update = update.Set(u => u.DepartmentId, dto.DepartmentId);
+        if (dto.Position != null) update = update.Set(u => u.Position, dto.Position);
+        if (dto.Salary.HasValue) update = update.Set(u => u.Salary, dto.Salary.Value);
+        if (dto.Address != null) update = update.Set(u => u.Address, dto.Address);
         // ---------------------------------------
 
         var result = await _context.Users.UpdateOneAsync(u => u.Id == id, update);
         if (result.MatchedCount == 0) return null;
+
+        // --- Sync with Employee ---
+        var empUpdate = Builders<Employee>.Update.Set(e => e.UpdatedAt, DateTime.UtcNow);
+        bool hasEmpUpdate = false;
+
+        if (dto.FirstName != null) { empUpdate = empUpdate.Set(e => e.FirstName, dto.FirstName); hasEmpUpdate = true; }
+        if (dto.LastName != null) { empUpdate = empUpdate.Set(e => e.LastName, dto.LastName); hasEmpUpdate = true; }
+        if (dto.Email != null) { empUpdate = empUpdate.Set(e => e.Email, dto.Email); hasEmpUpdate = true; }
+        if (dto.Phone != null) { empUpdate = empUpdate.Set(e => e.Phone, dto.Phone); hasEmpUpdate = true; }
+        if (dto.DepartmentId != null) { empUpdate = empUpdate.Set(e => e.DepartmentId, dto.DepartmentId); hasEmpUpdate = true; }
+        if (dto.Position != null) { empUpdate = empUpdate.Set(e => e.Position, dto.Position); hasEmpUpdate = true; }
+        if (dto.Salary.HasValue) { empUpdate = empUpdate.Set(e => e.Salary, dto.Salary.Value); hasEmpUpdate = true; }
+        if (dto.Address != null) { empUpdate = empUpdate.Set(e => e.Address, dto.Address); hasEmpUpdate = true; }
+
+        if (hasEmpUpdate)
+        {
+            await _context.Employees.UpdateOneAsync(e => e.UserId == id, empUpdate);
+        }
 
         return await GetByIdAsync(id);
     }
@@ -165,7 +192,10 @@ public class UserService : IUserService
             AnnualLeaveQuota = u.AnnualLeaveQuota,
             FirstName = u.FirstName,
             LastName = u.LastName,
-            DepartmentId = u.DepartmentId
+            DepartmentId = u.DepartmentId,
+            Position = u.Position,
+            Salary = u.Salary,
+            Address = u.Address
             // ---------------------------------------
         };
 
