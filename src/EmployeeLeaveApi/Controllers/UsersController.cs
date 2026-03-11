@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,Manager,HR")] // Only Admin/Manager can list all users
+    [Authorize(Roles = "admin,manager,hr")] // Only Admin/Manager can list all users
     public async Task<ActionResult<List<UserResponseDto>>> GetAll()
     {
         var users = await _userService.GetAllAsync();
@@ -45,7 +45,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")] // Only Admin can create users directly
+    [Authorize(Roles = "admin")] // Only Admin can create users directly
     public async Task<ActionResult<UserResponseDto>> Create([FromBody] UserCreateDto dto)
     {
         var existing = await _userService.GetByUsernameAsync(dto.Username);
@@ -70,8 +70,8 @@ public class UsersController : ControllerBase
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         // 2. ประกาศตัวแปรทั้งสองตัวเพื่อใช้ตรวจสอบสิทธิ์
-        var isAdmin = User.IsInRole("Admin");
-        var isHR = User.IsInRole("HR");
+        var isAdmin = User.IsInRole("admin");
+        var isHR = User.IsInRole("hr");
 
         // 3. ตรวจสอบว่า "มีสิทธิ์แก้ไขหรือไม่" (Admin หรือ HR หรือ เจ้าของบัญชี)
         if (!isAdmin && !isHR && currentUserId != id)
@@ -92,7 +92,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")] // Only Admin can delete users
+    [Authorize(Roles = "admin")] // Only Admin can delete users
     public async Task<ActionResult> Delete(string id)
     {
         var deleted = await _userService.DeleteAsync(id);

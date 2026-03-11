@@ -20,7 +20,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,Manager,HR")] // Restricted access
+    [Authorize(Roles = "admin,manager,hr")] // Restricted access
     public async Task<ActionResult<List<LeaveRequestDto>>> GetAll([FromQuery] string? status = null)
     {
         var requests = await _leaveService.GetAllAsync(status);
@@ -80,7 +80,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("{id}/approve")]
-    [Authorize(Roles = "Admin,Manager,HR")] // Only Approvers
+    [Authorize(Roles = "admin,manager,hr")] // Only Approvers
     public async Task<ActionResult<LeaveRequestDto>> Approve(string id, [FromBody] LeaveRequestUpdateDto dto)
     {
         var request = await _leaveService.ApproveAsync(id, dto);
@@ -96,7 +96,7 @@ public class LeaveRequestsController : ControllerBase
     }
 
     [HttpPut("{id}/reject")]
-    [Authorize(Roles = "Admin,Manager,HR")] // Only Approvers
+    [Authorize(Roles = "admin,manager,hr")] // Only Approvers
     public async Task<ActionResult<LeaveRequestDto>> Reject(string id, [FromBody] LeaveRequestUpdateDto dto)
     {
         var request = await _leaveService.RejectAsync(id, dto);
@@ -118,7 +118,7 @@ public class LeaveRequestsController : ControllerBase
         if (request == null) return NotFound();
 
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var isAdmin = User.IsInRole("Admin");
+        var isAdmin = User.IsInRole("admin");
 
         // Allow Admin to delete any.
         // Allow Owner to delete ONLY if Pending.
