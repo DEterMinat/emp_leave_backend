@@ -52,6 +52,7 @@ public class DatabaseCheckController : ControllerBase
             return StatusCode(500, new { Error = ex.Message });
         }
     }
+    [HttpGet("status")]
     public async Task<IActionResult> CheckDatabaseStatus()
     {
         try
