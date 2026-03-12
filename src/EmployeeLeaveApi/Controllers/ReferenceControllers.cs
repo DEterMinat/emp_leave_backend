@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using EmployeeLeaveApi.Data;
@@ -7,6 +8,7 @@ using EmployeeLeaveApi.Services;
 
 namespace EmployeeLeaveApi.Controllers;
 
+[Authorize(Roles = "admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class RolesController : ControllerBase
@@ -66,6 +68,7 @@ public class RolesController : ControllerBase
     }
 }
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DepartmentsController : ControllerBase
@@ -95,6 +98,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<DepartmentDto>> Create([FromBody] DepartmentCreateDto dto)
     {
         var dept = new Department { DepartmentName = dto.DepartmentName };
@@ -110,6 +114,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<DepartmentDto>> Update(string id, [FromBody] DepartmentUpdateDto dto)
     {
         var update = Builders<Department>.Update.Set(d => d.DepartmentName, dto.DepartmentName);
@@ -126,6 +131,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult> Delete(string id)
     {
         var result = await _context.Departments.DeleteOneAsync(d => d.Id == id);
@@ -141,6 +147,7 @@ public class DepartmentsController : ControllerBase
     }
 }
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class LeaveTypesController : ControllerBase
@@ -170,6 +177,7 @@ public class LeaveTypesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<LeaveTypeDto>> Create([FromBody] LeaveTypeCreateDto dto)
     {
         var type = new LeaveType { TypeName = dto.TypeName, Description = dto.Description };
@@ -185,6 +193,7 @@ public class LeaveTypesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<LeaveTypeDto>> Update(string id, [FromBody] LeaveTypeUpdateDto dto)
     {
         var update = Builders<LeaveType>.Update
@@ -204,6 +213,7 @@ public class LeaveTypesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult> Delete(string id)
     {
         var result = await _context.LeaveTypes.DeleteOneAsync(t => t.Id == id);

@@ -7,6 +7,7 @@ using EmployeeLeaveApi.Models;
 
 namespace EmployeeLeaveApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class LeaveBalancesController : ControllerBase
@@ -16,6 +17,7 @@ public class LeaveBalancesController : ControllerBase
     public LeaveBalancesController(IMongoDbContext context) => _context = context;
 
     [HttpGet]
+    [Authorize(Roles = "admin,manager,hr")]
     public async Task<ActionResult<List<LeaveBalanceDto>>> GetAll()
     {
         var balances = await _context.LeaveBalances.Find(_ => true).ToListAsync();
@@ -31,6 +33,7 @@ public class LeaveBalancesController : ControllerBase
     }
 
     [HttpGet("employee/{employeeId}")]
+    [Authorize(Roles = "admin,manager,hr")]
     public async Task<ActionResult<List<LeaveBalanceDto>>> GetByEmployee(string employeeId, [FromQuery] int? year = null)
     {
         var filter = year.HasValue
@@ -75,6 +78,7 @@ public class LeaveBalancesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<LeaveBalanceDto>> Create([FromBody] LeaveBalanceCreateDto dto)
     {
         var balance = new LeaveBalance
@@ -92,6 +96,7 @@ public class LeaveBalancesController : ControllerBase
     }
 
     [HttpPost("initialize/{employeeId}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<List<LeaveBalanceDto>>> InitializeBalances(string employeeId, [FromQuery] int year)
     {
         // Get all leave types and create default balances
@@ -138,6 +143,7 @@ public class LeaveBalancesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult> Delete(string id)
     {
         var result = await _context.LeaveBalances.DeleteOneAsync(b => b.Id == id);

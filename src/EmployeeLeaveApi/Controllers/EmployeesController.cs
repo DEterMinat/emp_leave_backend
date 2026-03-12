@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using EmployeeLeaveApi.Data;
@@ -6,6 +7,7 @@ using EmployeeLeaveApi.Models;
 
 namespace EmployeeLeaveApi.Controllers;
 
+[Authorize(Roles = "admin,manager,hr")]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
