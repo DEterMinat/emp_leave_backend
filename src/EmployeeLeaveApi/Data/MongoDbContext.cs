@@ -34,6 +34,7 @@ public class MongoDbContext : IMongoDbContext
     public IMongoCollection<DeviceToken> DeviceTokens => _database.GetCollection<DeviceToken>("deviceTokens");
     public IMongoCollection<ActivityLog> ActivityLogs => _database.GetCollection<ActivityLog>("activityLogs");
     public IMongoCollection<Attendance> Attendances => _database.GetCollection<Attendance>("attendances");
+    public IMongoCollection<UserNotification> UserNotifications => _database.GetCollection<UserNotification>("userNotifications");
 
     public async Task<bool> TestConnectionAsync()
     {

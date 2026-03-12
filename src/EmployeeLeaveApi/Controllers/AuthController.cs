@@ -4,6 +4,8 @@ using EmployeeLeaveApi.Data;
 using EmployeeLeaveApi.Helpers;
 using EmployeeLeaveApi.Models;
 using System.ComponentModel.DataAnnotations;
+using EmployeeLeaveApi.DTOs;
+using EmployeeLeaveApi.Services;
 
 namespace EmployeeLeaveApi.Controllers;
 
@@ -67,7 +69,7 @@ public class AuthController : ControllerBase
     /// Register new user
     /// </summary>
     [HttpPost("register")]
-    public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request, [FromServices] IUserService userService)
     {
         _logger.LogInformation("📝 Registration attempt for user: {Username}", request.Username);
 
@@ -117,24 +119,30 @@ public class AuthController : ControllerBase
             }
         }
 
-        // Hash password
-        var hashedPassword = PasswordHelper.HashPassword(request.Password);
-
-        var user = new User
+        // Use UserService to ensure Employee and Leave Balances are created
+        var userCreateDto = new UserCreateDto
         {
             Username = request.Username,
-            Password = hashedPassword,
+            Password = request.Password,
             RoleId = roleId,
-            CreatedAt = DateTime.UtcNow
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            DepartmentId = request.DepartmentId,
+            Phone = request.Phone,
+            Position = request.Position,
+            Salary = request.Salary,
+            Address = request.Address,
+            AnnualLeaveQuota = request.AnnualLeaveQuota
         };
 
-        await _context.Users.InsertOneAsync(user);
+        var user = await userService.CreateAsync(userCreateDto);
 
         _logger.LogInformation("✅ Registration successful for user: {Username}", request.Username);
 
         return Ok(new RegisterResponse
         {
-            UserId = user.Id!,
+            UserId = user.Id,
             Username = user.Username,
             Message = "User registered successfully"
         });
@@ -202,6 +210,17 @@ public class RegisterRequest
 
     [Required]
     public string RoleId { get; set; } = null!;
+
+    // Optional fields for automated profile setup
+    public string? Email { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? DepartmentId { get; set; }
+    public string? Phone { get; set; }
+    public string? Position { get; set; }
+    public decimal? Salary { get; set; }
+    public string? Address { get; set; }
+    public int? AnnualLeaveQuota { get; set; }
 }
 
 public class RegisterResponse

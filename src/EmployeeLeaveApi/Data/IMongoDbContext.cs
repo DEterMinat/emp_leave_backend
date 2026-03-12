@@ -16,5 +16,6 @@ public interface IMongoDbContext
     IMongoCollection<DeviceToken> DeviceTokens { get; }
     IMongoCollection<ActivityLog> ActivityLogs { get; }
     IMongoCollection<Attendance> Attendances { get; }
+    IMongoCollection<UserNotification> UserNotifications { get; }
     Task<bool> TestConnectionAsync();
 }

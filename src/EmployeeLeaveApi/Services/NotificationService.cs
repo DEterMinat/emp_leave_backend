@@ -9,6 +9,8 @@ public interface INotificationService
 {
     Task SendNotificationAsync(string userId, string title, string body, Dictionary<string, string>? data = null);
     Task SendNotificationToAllAsync(string title, string body);
+    Task<List<UserNotification>> GetUserNotificationsAsync(string userId);
+    Task<bool> MarkAsReadAsync(string notificationId);
 }
 
 public class NotificationService : INotificationService
@@ -26,6 +28,19 @@ public class NotificationService : INotificationService
     {
         try
         {
+            // 1. Persist notification to Database (New requirement from Design)
+            var notification = new UserNotification
+            {
+                UserId = userId,
+                Title = title,
+                Message = body,
+                Type = data != null && data.ContainsKey("type") ? data["type"] : "Info",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            await _context.UserNotifications.InsertOneAsync(notification);
+
+            // 2. Send Push Notification via FCM
             // Find all tokens for this user
             var tokens = await _context.DeviceTokens
                 .Find(t => t.UserId == userId)
@@ -82,5 +97,21 @@ public class NotificationService : INotificationService
     public async Task SendNotificationToAllAsync(string title, string body)
     {
         // Implementation for topics or batch sending
+    }
+
+    public async Task<List<UserNotification>> GetUserNotificationsAsync(string userId)
+    {
+        return await _context.UserNotifications
+            .Find(n => n.UserId == userId)
+            .SortByDescending(n => n.CreatedAt)
+            .Limit(50)
+            .ToListAsync();
+    }
+
+    public async Task<bool> MarkAsReadAsync(string notificationId)
+    {
+        var update = Builders<UserNotification>.Update.Set(n => n.IsRead, true);
+        var result = await _context.UserNotifications.UpdateOneAsync(n => n.Id == notificationId, update);
+        return result.ModifiedCount > 0;
     }
 }

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using EmployeeLeaveApi.Data;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Linq;
 
 namespace EmployeeLeaveApi.Controllers;
 
@@ -9,16 +11,47 @@ namespace EmployeeLeaveApi.Controllers;
 public class DatabaseCheckController : ControllerBase
 {
     private readonly IMongoDbContext _context;
+    private readonly ILogger<DatabaseCheckController> _logger;
 
-    public DatabaseCheckController(IMongoDbContext context)
+    public DatabaseCheckController(IMongoDbContext context, ILogger<DatabaseCheckController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
-    /// <summary>
-    /// Check all collections status in database
-    /// </summary>
-    [HttpGet("status")]
+    [HttpGet("inspect")]
+    public async Task<IActionResult> Inspect()
+    {
+        try
+        {
+            var database = _context.Users.Database;
+            var collections = await database.ListCollectionNames().ToListAsync();
+            var counts = new Dictionary<string, long>();
+
+            foreach (var name in collections)
+            {
+                var count = await database.GetCollection<BsonDocument>(name).CountDocumentsAsync(new BsonDocument());
+                counts[name] = count;
+            }
+
+            // Sample some users to see IDs
+            var users = await database.GetCollection<BsonDocument>("users").Find(new BsonDocument()).Limit(10).ToListAsync();
+            var userDetails = users.Select(u => new {
+                Id = u["_id"].ToString(),
+                Type = u["_id"].BsonType.ToString(),
+                Username = u.Contains("username") ? u["username"].ToString() : "N/A"
+            }).ToList();
+
+            return Ok(new {
+                Collections = counts,
+                Users = userDetails
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Error = ex.Message });
+        }
+    }
     public async Task<IActionResult> CheckDatabaseStatus()
     {
         try
@@ -132,6 +165,16 @@ public class DatabaseCheckController : ControllerBase
                 Collection = "attendances",
                 Count = attendCount,
                 Status = attendCount > 0 ? "✅ Has Data" : "ℹ️ Empty (optional)",
+                Required = false
+            });
+
+            // 12. UserNotifications
+            var notifyCount = await _context.UserNotifications.CountDocumentsAsync(_ => true);
+            results.Add(new
+            {
+                Collection = "userNotifications",
+                Count = notifyCount,
+                Status = notifyCount > 0 ? "✅ Has Data" : "ℹ️ Empty (optional)",
                 Required = false
             });
 
@@ -452,6 +495,110 @@ public class DatabaseCheckController : ControllerBase
                 Error = "Failed to seed master data",
                 Message = ex.Message
             });
+        }
+    }
+
+    /// <summary>
+    /// Sync missing employee and leave balance records for existing users
+    /// </summary>
+    [HttpPost("sync-missing-records")]
+    public async Task<IActionResult> SyncMissingRecords()
+    {
+        _logger.LogInformation("🔄 Starting SyncMissingRecords...");
+        try
+        {
+            var results = new List<string>();
+            var users = await _context.Users.Find(_ => true).ToListAsync();
+            _logger.LogInformation("Found {Count} users", users.Count);
+
+            var itDept = await _context.Departments.Find(d => d.DepartmentName == "IT").FirstOrDefaultAsync();
+            var leaveTypes = await _context.LeaveTypes.Find(_ => true).ToListAsync();
+            _logger.LogInformation("Found {Count} leave types", leaveTypes.Count);
+
+            var currentYear = DateTime.UtcNow.Year;
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    _logger.LogInformation("Processing user: {Username} ({Id})", user.Username, user.Id);
+
+                    // 1. Sync Employee Record
+                    var existingEmp = await _context.Employees.Find(e => e.UserId == user.Id).FirstOrDefaultAsync();
+                    if (existingEmp == null)
+                    {
+                        _logger.LogInformation("Creating missing Employee for {Username}", user.Username);
+                        var employee = new Models.Employee
+                        {
+                            UserId = user.Id!,
+                            DepartmentId = user.DepartmentId ?? itDept?.Id ?? "",
+                            FirstName = user.FirstName ?? user.Username,
+                            LastName = user.LastName ?? "",
+                            Email = user.Email ?? $"{user.Username}@company.com",
+                            Phone = user.Phone,
+                            Position = user.Position ?? "Staff",
+                            Salary = user.Salary,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _context.Employees.InsertOneAsync(employee);
+                        results.Add($"✅ Created Employee for user: {user.Username}");
+                    }
+
+                    // 2. Sync Leave Balances
+                    var hasBalances = await _context.LeaveBalances.Find(b => b.EmployeeId == user.Id).AnyAsync();
+                    _logger.LogInformation("User {Username} has balances: {HasBalances}", user.Username, hasBalances);
+
+                    if (!hasBalances)
+                    {
+                        _logger.LogInformation("Initializing balances for {Username}", user.Username);
+                        int balancesCreated = 0;
+                        foreach (var type in leaveTypes)
+                        {
+                            int totalDays = type.TypeName switch
+                            {
+                                "Annual Leave" => user.AnnualLeaveQuota ?? 10,
+                                "Sick Leave" => 30,
+                                "Personal Leave" => 3,
+                                "Ordination Leave" => 15,
+                                _ => 10
+                            };
+
+                            var balance = new Models.LeaveBalance
+                            {
+                                EmployeeId = user.Id!,
+                                LeaveTypeId = type.Id!,
+                                Year = currentYear,
+                                TotalDays = totalDays,
+                                UsedDays = 0,
+                                RemainingDays = totalDays
+                            };
+                            await _context.LeaveBalances.InsertOneAsync(balance);
+                            balancesCreated++;
+                        }
+                        _logger.LogInformation("Initialized {Count} balances for {Username}", balancesCreated, user.Username);
+                        results.Add($"✅ Initialized {balancesCreated} leave balances for user: {user.Username}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Failed to sync user {Username}", user.Username);
+                    results.Add($"❌ Failed to sync user {user.Username}: {ex.Message}");
+                }
+            }
+
+            if (!results.Any())
+            {
+                _logger.LogInformation("Sync completed: Database already in sync.");
+                return Ok(new { Message = "Database is already in sync." });
+            }
+
+            _logger.LogInformation("Sync completed successfully. {Count} changes made.", results.Count);
+            return Ok(new { Message = "Sync completed", Details = results });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Sync failed");
+            return StatusCode(500, new { Error = "Sync failed", Message = ex.Message });
         }
     }
 }
