@@ -532,20 +532,31 @@ public class DatabaseCheckController : ControllerBase
                         var employee = new Models.Employee
                         {
                             UserId = user.Id!,
-                            DepartmentId = user.DepartmentId ?? itDept?.Id ?? "",
-                            FirstName = user.FirstName ?? user.Username,
+                            DepartmentId = !string.IsNullOrEmpty(user.DepartmentId) ? user.DepartmentId : (itDept?.Id ?? ""),
+                            FirstName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : user.Username,
                             LastName = user.LastName ?? "",
-                            Email = user.Email ?? $"{user.Username}@company.com",
+                            Email = !string.IsNullOrEmpty(user.Email) ? user.Email : $"{user.Username}@company.com",
                             Phone = user.Phone,
-                            Position = user.Position ?? "Staff",
+                            Position = !string.IsNullOrEmpty(user.Position) ? user.Position : "Staff",
                             Salary = user.Salary,
                             CreatedAt = DateTime.UtcNow
                         };
+
+                        // Final safety check: if DepartmentId is still empty, we must NOT insert or it will crash serialization
+                        if (string.IsNullOrEmpty(employee.DepartmentId))
+                        {
+                            _logger.LogWarning("⚠️ Could not find a valid DepartmentId for user {Username}. Skipping employee creation.", user.Username);
+                            results.Add($"⚠️ Skipped employee creation for {user.Username} (Missing Department)");
+                            continue;
+                        }
+
                         await _context.Employees.InsertOneAsync(employee);
                         results.Add($"✅ Created Employee for user: {user.Username}");
                     }
 
                     // 2. Sync Leave Balances
+                    // Get the actual employee record to use its ID mapping if needed, 
+                    // though current services use User.Id as "EmployeeId"
                     var hasBalances = await _context.LeaveBalances.Find(b => b.EmployeeId == user.Id).AnyAsync();
                     _logger.LogInformation("User {Username} has balances: {HasBalances}", user.Username, hasBalances);
 
@@ -600,6 +611,156 @@ public class DatabaseCheckController : ControllerBase
         {
             _logger.LogError(ex, "❌ Sync failed");
             return StatusCode(500, new { Error = "Sync failed", Message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Forces a complete system seed, creating missing master data and linking all users.
+    /// </summary>
+    [HttpPost("force-seed-all")]
+    public async Task<IActionResult> ForceSeedAll()
+    {
+        _logger.LogInformation("🔥 Starting ForceSeedAll...");
+        try
+        {
+            var reports = new List<string>();
+
+            // 1. Ensure Roles
+            var roles = new[] { "Admin", "Manager", "HR", "Employee" };
+            foreach (var roleName in roles)
+            {
+                var existing = await _context.Roles.Find(r => r.RoleName == roleName).AnyAsync();
+                if (!existing)
+                {
+                    await _context.Roles.InsertOneAsync(new Models.Role { RoleName = roleName });
+                    reports.Add($"✅ Created Role: {roleName}");
+                }
+            }
+
+            // 2. Ensure Default Department
+            var dept = await _context.Departments.Find(d => d.DepartmentName == "General").FirstOrDefaultAsync();
+            if (dept == null)
+            {
+                dept = new Models.Department { DepartmentName = "General" };
+                await _context.Departments.InsertOneAsync(dept);
+                reports.Add("✅ Created Default Department: General");
+            }
+
+            // 3. Ensure Standard Leave Types
+            var defaultLeaveTypes = new[]
+            {
+                new { Name = "Annual Leave", Days = 6 },
+                new { Name = "Sick Leave", Days = 30 },
+                new { Name = "Personal Leave", Days = 3 },
+                new { Name = "Ordination Leave", Days = 15 }
+            };
+
+            foreach (var lt in defaultLeaveTypes)
+            {
+                var existing = await _context.LeaveTypes.Find(t => t.TypeName == lt.Name).FirstOrDefaultAsync();
+                if (existing == null)
+                {
+                    await _context.LeaveTypes.InsertOneAsync(new Models.LeaveType { TypeName = lt.Name, Description = $"Default {lt.Name}" });
+                    reports.Add($"✅ Created Leave Type: {lt.Name}");
+                }
+            }
+
+            // Reload leave types after seeding
+            var allLeaveTypes = await _context.LeaveTypes.Find(_ => true).ToListAsync();
+
+            // 4. Process all Users
+            var users = await _context.Users.Find(_ => true).ToListAsync();
+            var adminRole = await _context.Roles.Find(r => r.RoleName == "Admin").FirstOrDefaultAsync();
+            var empRole = await _context.Roles.Find(r => r.RoleName == "Employee").FirstOrDefaultAsync();
+
+            int userFixes = 0;
+            int balanceFixes = 0;
+
+            foreach (var user in users)
+            {
+                bool userUpdated = false;
+
+                // Ensure Role
+                if (string.IsNullOrEmpty(user.RoleId))
+                {
+                    user.RoleId = user.Username.ToLower().Contains("admin") ? (adminRole?.Id ?? "") : (empRole?.Id ?? "");
+                    userUpdated = true;
+                }
+
+                // Ensure Department
+                if (string.IsNullOrEmpty(user.DepartmentId))
+                {
+                    user.DepartmentId = dept.Id!;
+                    userUpdated = true;
+                }
+
+                // Update user if needed
+                if (userUpdated)
+                {
+                    await _context.Users.ReplaceOneAsync(u => u.Id == user.Id, user);
+                    userFixes++;
+                }
+
+                // Ensure Employee Record
+                var existingEmp = await _context.Employees.Find(e => e.UserId == user.Id).FirstOrDefaultAsync();
+                if (existingEmp == null)
+                {
+                    var newEmp = new Models.Employee
+                    {
+                        UserId = user.Id!,
+                        DepartmentId = user.DepartmentId!,
+                        FirstName = user.FirstName ?? user.Username,
+                        LastName = user.LastName ?? "User",
+                        Email = user.Email ?? $"{user.Username}@company.com",
+                        Position = user.Position ?? "Staff",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _context.Employees.InsertOneAsync(newEmp);
+                    reports.Add($"✅ Created Employee record for {user.Username}");
+                }
+
+                // Ensure ALL Leave Balances for this user
+                foreach (var type in allLeaveTypes)
+                {
+                    var existingBal = await _context.LeaveBalances.Find(
+                        b => b.EmployeeId == user.Id && b.LeaveTypeId == type.Id && b.Year == DateTime.UtcNow.Year
+                    ).AnyAsync();
+
+                    if (!existingBal)
+                    {
+                        var quota = defaultLeaveTypes.FirstOrDefault(d => d.Name == type.TypeName)?.Days ?? 10;
+                        if (type.TypeName == "Annual Leave" && user.AnnualLeaveQuota.HasValue)
+                        {
+                            quota = user.AnnualLeaveQuota.Value;
+                        }
+
+                        var balance = new Models.LeaveBalance
+                        {
+                            EmployeeId = user.Id!,
+                            LeaveTypeId = type.Id!,
+                            Year = DateTime.UtcNow.Year,
+                            TotalDays = quota,
+                            UsedDays = 0,
+                            RemainingDays = quota
+                        };
+                        await _context.LeaveBalances.InsertOneAsync(balance);
+                        balanceFixes++;
+                    }
+                }
+            }
+
+            reports.Add($"📊 Fixed {userFixes} users and initialized {balanceFixes} leave balances.");
+
+            return Ok(new
+            {
+                Message = "🔥 Force Seed Completed",
+                Reports = reports
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Force Seed failed");
+            return StatusCode(500, new { Error = "Force Seed failed", Message = ex.Message });
         }
     }
 }
