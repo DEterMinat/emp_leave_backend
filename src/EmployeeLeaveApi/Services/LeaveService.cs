@@ -59,6 +59,11 @@ public class LeaveService : ILeaveService
 
     public async Task<LeaveRequestDto> CreateAsync(LeaveRequestCreateDto dto)
     {
+        if (dto.EndDate < dto.StartDate)
+        {
+            throw new ArgumentException("End date cannot be earlier than start date.");
+        }
+
         var totalDays = (int)(dto.EndDate - dto.StartDate).TotalDays + 1;
 
         var request = new LeaveRequest
@@ -119,6 +124,33 @@ public class LeaveService : ILeaveService
 
     public async Task<LeaveRequestDto?> ApproveAsync(string id, LeaveRequestUpdateDto dto)
     {
+        var request = await _context.LeaveRequests.Find(r => r.Id == id).FirstOrDefaultAsync();
+        if (request == null) return null;
+
+        // Logic Guard 1: Ensure request is Pending (Prevent double deduction)
+        if (request.Status != "Pending")
+        {
+            throw new InvalidOperationException($"Cannot approve a request with status: {request.Status}");
+        }
+
+        var year = DateTime.UtcNow.Year;
+
+        // Logic Guard 2: Verify Leave Balance exists and is sufficient
+        var balance = await _context.LeaveBalances.Find(
+            b => b.EmployeeId == request.EmployeeId && b.LeaveTypeId == request.LeaveTypeId && b.Year == year
+        ).FirstOrDefaultAsync();
+
+        if (balance == null)
+        {
+            throw new InvalidOperationException("Leave balance record not found for this employee and leave type.");
+        }
+
+        if (balance.RemainingDays < request.TotalDays)
+        {
+            throw new InvalidOperationException($"Insufficient leave balance. Remaining: {balance.RemainingDays}, Requested: {request.TotalDays}");
+        }
+
+        // Proceed with Approval
         var update = Builders<LeaveRequest>.Update
             .Set(r => r.Status, "Approved")
             .Set(r => r.Comment, dto.Comment)
@@ -129,25 +161,11 @@ public class LeaveService : ILeaveService
         if (result.MatchedCount == 0) return null;
 
         // Update leave balance
-        var request = await _context.LeaveRequests.Find(r => r.Id == id).FirstOrDefaultAsync();
-        if (request != null)
-        {
-            var year = DateTime.UtcNow.Year;
+        var balanceUpdate = Builders<LeaveBalance>.Update
+            .Inc(b => b.UsedDays, request.TotalDays)
+            .Inc(b => b.RemainingDays, -request.TotalDays);
 
-            // Check if balance exists, if not create one (optional safeguard)
-            var balance = await _context.LeaveBalances.Find(
-                b => b.EmployeeId == request.EmployeeId && b.LeaveTypeId == request.LeaveTypeId && b.Year == year
-            ).FirstOrDefaultAsync();
-
-            if (balance != null)
-            {
-                var balanceUpdate = Builders<LeaveBalance>.Update
-                    .Inc(b => b.UsedDays, request.TotalDays)
-                    .Inc(b => b.RemainingDays, -request.TotalDays);
-
-                await _context.LeaveBalances.UpdateOneAsync(b => b.Id == balance.Id, balanceUpdate);
-            }
-        }
+        await _context.LeaveBalances.UpdateOneAsync(b => b.Id == balance.Id, balanceUpdate);
 
 
         var updatedRequest = await GetByIdAsync(id);
@@ -167,6 +185,15 @@ public class LeaveService : ILeaveService
 
     public async Task<LeaveRequestDto?> RejectAsync(string id, LeaveRequestUpdateDto dto)
     {
+        var request = await _context.LeaveRequests.Find(r => r.Id == id).FirstOrDefaultAsync();
+        if (request == null) return null;
+
+        // Logic Guard: Ensure request is Pending
+        if (request.Status != "Pending")
+        {
+            throw new InvalidOperationException($"Cannot reject a request with status: {request.Status}");
+        }
+
         var update = Builders<LeaveRequest>.Update
             .Set(r => r.Status, "Rejected")
             .Set(r => r.Comment, dto.Comment)
