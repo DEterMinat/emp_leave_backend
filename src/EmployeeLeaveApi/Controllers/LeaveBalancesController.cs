@@ -36,15 +36,26 @@ public class LeaveBalancesController : ControllerBase
     [Authorize(Roles = "admin,manager,hr")]
     public async Task<ActionResult<List<LeaveBalanceDto>>> GetByEmployee(string employeeId, [FromQuery] int? year = null)
     {
-        var filter = year.HasValue
-            ? Builders<LeaveBalance>.Filter.And(
-                Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, employeeId),
-                Builders<LeaveBalance>.Filter.Eq(b => b.Year, year.Value))
-            : Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, employeeId);
+        // Flexible ID lookup: The employeeId passed could be the User.Id (current storage pattern)
+        // or the Employee.Id (ER diagram pattern). We should support both.
+        
+        var targetEmployeeId = employeeId;
+        
+        // 1. Try to find by direct ID match first
+        var balances = await GetBalancesInternal(targetEmployeeId, year);
+        
+        // 2. If no balances found, it might be that employeeId is the _id of an Employee record
+        if (balances.Count == 0)
+        {
+            var empRecord = await _context.Employees.Find(e => e.Id == employeeId).FirstOrDefaultAsync();
+            if (empRecord != null)
+            {
+                // Try searching using the UserId linked to this employee record
+                balances = await GetBalancesInternal(empRecord.UserId, year);
+            }
+        }
 
-        var balances = await _context.LeaveBalances.Find(filter).ToListAsync();
         var dtos = new List<LeaveBalanceDto>();
-
         foreach (var b in balances)
         {
             var type = await _context.LeaveTypes.Find(t => t.Id == b.LeaveTypeId).FirstOrDefaultAsync();
@@ -52,6 +63,17 @@ public class LeaveBalancesController : ControllerBase
         }
 
         return Ok(dtos);
+    }
+
+    private async Task<List<LeaveBalance>> GetBalancesInternal(string empId, int? year)
+    {
+        var filter = year.HasValue
+            ? Builders<LeaveBalance>.Filter.And(
+                Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, empId),
+                Builders<LeaveBalance>.Filter.Eq(b => b.Year, year.Value))
+            : Builders<LeaveBalance>.Filter.Eq(b => b.EmployeeId, empId);
+
+        return await _context.LeaveBalances.Find(filter).ToListAsync();
     }
 
     [HttpGet("mine")]
@@ -99,19 +121,24 @@ public class LeaveBalancesController : ControllerBase
     [Authorize(Roles = "admin,hr")]
     public async Task<ActionResult<List<LeaveBalanceDto>>> InitializeBalances(string employeeId, [FromQuery] int year)
     {
+        // Resolve ID: use the provided ID if it's already a User, 
+        // otherwise look up the UserId if it's an Employee record ID.
+        var targetUserId = employeeId;
+        var empRecord = await _context.Employees.Find(e => e.Id == employeeId).FirstOrDefaultAsync();
+        if (empRecord != null)
+        {
+            targetUserId = empRecord.UserId;
+        }
+
         // Get all leave types and create default balances
         var leaveTypes = await _context.LeaveTypes.Find(_ => true).ToListAsync();
         var balances = new List<LeaveBalance>();
 
         var defaultDays = new Dictionary<string, int>
         {
-            { "ลาพักผ่อน", 6 },
             { "Annual Leave", 6 },
-            { "ลาป่วย", 30 },
             { "Sick Leave", 30 },
-            { "ลากิจ", 3 },
             { "Personal Leave", 3 },
-            { "ลาอุปสมบท", 15 },
             { "Ordination Leave", 15 }
         };
 
@@ -119,7 +146,7 @@ public class LeaveBalancesController : ControllerBase
         {
             // Check if balance already exists
             var existing = await _context.LeaveBalances.Find(
-                b => b.EmployeeId == employeeId && b.LeaveTypeId == type.Id && b.Year == year
+                b => b.EmployeeId == targetUserId && b.LeaveTypeId == type.Id && b.Year == year
             ).FirstOrDefaultAsync();
 
             if (existing == null)
@@ -127,7 +154,7 @@ public class LeaveBalancesController : ControllerBase
                 var totalDays = defaultDays.GetValueOrDefault(type.TypeName, 10);
                 var balance = new LeaveBalance
                 {
-                    EmployeeId = employeeId,
+                    EmployeeId = targetUserId,
                     LeaveTypeId = type.Id!,
                     Year = year,
                     TotalDays = totalDays,
