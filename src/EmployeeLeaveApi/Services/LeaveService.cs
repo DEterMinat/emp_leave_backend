@@ -28,7 +28,8 @@ public class LeaveService : ILeaveService
             ? Builders<LeaveRequest>.Filter.Eq(r => r.Status, status)
             : Builders<LeaveRequest>.Filter.Empty;
 
-        var requests = await _context.LeaveRequests.Find(filter).ToListAsync();
+        var cursor = await _context.LeaveRequests.FindAsync(filter);
+        var requests = await cursor.ToListAsync();
         var dtos = new List<LeaveRequestDto>();
 
         foreach (var r in requests)
@@ -41,14 +42,16 @@ public class LeaveService : ILeaveService
 
     public async Task<LeaveRequestDto?> GetByIdAsync(string id)
     {
-        var r = await _context.LeaveRequests.Find(req => req.Id == id).FirstOrDefaultAsync();
+        var cursor = await _context.LeaveRequests.FindAsync(req => req.Id == id);
+        var r = await cursor.FirstOrDefaultAsync();
         if (r == null) return null;
         return await MapToDto(r);
     }
 
     public async Task<List<LeaveRequestDto>> GetByEmployeeIdAsync(string employeeId)
     {
-        var requests = await _context.LeaveRequests.Find(r => r.EmployeeId == employeeId).ToListAsync();
+        var cursor = await _context.LeaveRequests.FindAsync(r => r.EmployeeId == employeeId);
+        var requests = await cursor.ToListAsync();
         var dtos = new List<LeaveRequestDto>();
         foreach (var r in requests)
         {
@@ -136,9 +139,10 @@ public class LeaveService : ILeaveService
         var year = DateTime.UtcNow.Year;
 
         // Logic Guard 2: Verify Leave Balance exists and is sufficient
-        var balance = await _context.LeaveBalances.Find(
+        var cursor = await _context.LeaveBalances.FindAsync(
             b => b.EmployeeId == request.EmployeeId && b.LeaveTypeId == request.LeaveTypeId && b.Year == year
-        ).FirstOrDefaultAsync();
+        );
+        var balance = await cursor.FirstOrDefaultAsync();
 
         if (balance == null)
         {
@@ -227,7 +231,8 @@ public class LeaveService : ILeaveService
 
     public async Task<List<LeaveAttachmentDto>> GetAttachmentsAsync(string requestId)
     {
-        var attachments = await _context.LeaveAttachments.Find(a => a.RequestId == requestId).ToListAsync();
+        var cursor = await _context.LeaveAttachments.FindAsync(a => a.RequestId == requestId);
+        var attachments = await cursor.ToListAsync();
         return attachments.Select(a => new LeaveAttachmentDto
         {
             Id = a.Id!,
@@ -240,9 +245,14 @@ public class LeaveService : ILeaveService
 
     private async Task<LeaveRequestDto> MapToDto(LeaveRequest r)
     {
-        var emp = await _context.Users.Find(e => e.Id == r.EmployeeId).FirstOrDefaultAsync();
-        var type = await _context.LeaveTypes.Find(t => t.Id == r.LeaveTypeId).FirstOrDefaultAsync();
-        var hasAttachments = await _context.LeaveAttachments.Find(a => a.RequestId == r.Id).AnyAsync();
+        var userCursor = await _context.Users.FindAsync(e => e.Id == r.EmployeeId);
+        var emp = await userCursor.FirstOrDefaultAsync();
+
+        var typeCursor = await _context.LeaveTypes.FindAsync(t => t.Id == r.LeaveTypeId);
+        var type = await typeCursor.FirstOrDefaultAsync();
+
+        var attachCursor = await _context.LeaveAttachments.FindAsync(a => a.RequestId == r.Id);
+        var hasAttachments = await attachCursor.AnyAsync();
 
         return new LeaveRequestDto
         {

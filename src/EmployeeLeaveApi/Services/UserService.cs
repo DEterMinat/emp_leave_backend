@@ -18,7 +18,8 @@ public class UserService : IUserService
 
     public async Task<List<UserResponseDto>> GetAllAsync()
     {
-        var users = await _context.Users.Find(_ => true).ToListAsync();
+        var cursor = await _context.Users.FindAsync(_ => true);
+        var users = await cursor.ToListAsync();
         var dtos = new List<UserResponseDto>();
 
         foreach (var u in users)
@@ -31,7 +32,8 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto?> GetByIdAsync(string id)
     {
-        var user = await _context.Users.Find(u => u.Id == id).FirstOrDefaultAsync();
+        var cursor = await _context.Users.FindAsync(u => u.Id == id);
+        var user = await cursor.FirstOrDefaultAsync();
         if (user == null) return null;
         return await MapToDto(user);
     }
@@ -172,7 +174,8 @@ public class UserService : IUserService
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        return await _context.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+        var cursor = await _context.Users.FindAsync(u => u.Username == username);
+        return await cursor.FirstOrDefaultAsync();
     }
 
     private async Task<UserResponseDto> MapToDto(User u)

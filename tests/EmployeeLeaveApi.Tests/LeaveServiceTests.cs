@@ -47,12 +47,8 @@ public class LeaveServiceTests
         var id = "invalid-id";
         var dto = new LeaveRequestUpdateDto { Comment = "Approved", ApproverId = "admin" };
 
-        _mockLeaveRequests.Setup(c => c.UpdateOneAsync(
-            It.IsAny<FilterDefinition<LeaveRequest>>(),
-            It.IsAny<UpdateDefinition<LeaveRequest>>(),
-            null,
-            default))
-            .ReturnsAsync(new UpdateResult.Acknowledged(0, 0, null));
+        // Current code does Find() first to check request exists
+        SetupMockCursor(_mockLeaveRequests, new List<LeaveRequest>());
 
         // Act
         var result = await _service.ApproveAsync(id, dto);
