@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ "master", "main" ]
 
-defaults:
-  run:
-    working-directory: emp_leave_backend
-
 jobs:
   # =============================================
   # Stage 1: Build & Lint
@@ -52,7 +48,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: backend-release
-        path: emp_leave_backend/publish
+        path: ./publish
         retention-days: 14
 
   # =============================================
@@ -97,7 +93,7 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: emp_leave_backend/TestResults
+        path: ./TestResults
         retention-days: 14
 
     - name: 📈 Generate Coverage Summary
