@@ -1,0 +1,4 @@
+{"_id": {"$oid": "696a6faf0b6849bd411eedbe"}, "roleName": "Employee"}
+{"_id": {"$oid": "69707171407a382db0243cb6"}, "roleName": "Admin"}
+{"_id": {"$oid": "69772220c93be719d7b3ed6f"}, "roleName": "HR"}
+{"_id": {"$oid": "697f4af453061dbd6d878deb"}, "roleName": "Manager"}

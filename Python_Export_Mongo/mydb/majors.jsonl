@@ -1,0 +1,5 @@
+{"_id": {"$oid": "6941042a1160589349606e67"}, "major_id": "S19", "m_name": "\u0e27\u0e34\u0e17\u0e22\u0e32\u0e01\u0e32\u0e23\u0e41\u0e25\u0e30\u0e40\u0e17\u0e04\u0e42\u0e19\u0e42\u0e25\u0e22\u0e35\u0e14\u0e34\u0e08\u0e34\u0e17\u0e31\u0e251"}
+{"_id": {"$oid": "6941042a1160589349606e68"}, "major_id": "S20", "m_name": "\u0e27\u0e34\u0e17\u0e22\u0e32\u0e01\u0e32\u0e23\u0e41\u0e25\u0e30\u0e40\u0e17\u0e04\u0e42\u0e19\u0e42\u0e25\u0e22\u0e35\u0e14\u0e34\u0e08\u0e34\u0e17\u0e31\u0e252"}
+{"_id": {"$oid": "6941042a1160589349606e69"}, "major_id": "S05", "m_name": "\u0e27\u0e34\u0e17\u0e22\u0e32\u0e01\u0e32\u0e23\u0e04\u0e2d\u0e21\u0e1e\u0e34\u0e27\u0e40\u0e15\u0e2d\u0e23\u0e4c"}
+{"_id": {"$oid": "69417535461d316f9b4a75f8"}, "B_id": "SRC01", "B_name": "\u0e2a\u0e32\u0e02\u0e32\u0e1a\u0e32\u0e07\u0e40\u0e02\u0e19", "B_tel": "02-111-4455"}
+{"_id": {"$oid": "69417535461d316f9b4a75f9"}, "B_id": "SRC02", "B_name": "\u0e2a\u0e32\u0e02\u0e32\u0e28\u0e23\u0e35\u0e23\u0e32\u0e0a\u0e32", "B_tel": "02-111-5566"}

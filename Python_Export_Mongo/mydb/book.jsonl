@@ -1,0 +1,7 @@
+{"_id": {"$oid": "69785ecbeba2370098b8dd9e"}, "name": "photoshop", "cat": "graphic", "sales": 2500, "date": "2020-02-18"}
+{"_id": {"$oid": "69785ecbeba2370098b8dd9f"}, "name": "excel", "cat": "office", "sales": 1990, "date": "2020-01-12"}
+{"_id": {"$oid": "69785ecbeba2370098b8dda0"}, "name": "word", "cat": "office", "sales": 1590, "date": "2020-03-15"}
+{"_id": {"$oid": "69785ecbeba2370098b8dda1"}, "name": "indesign", "cat": "graphic", "sales": 2850, "date": "2019-08-07"}
+{"_id": {"$oid": "69785ecbeba2370098b8dda2"}, "name": "lightroom", "cat": "graphic", "sales": 2550, "date": "2020-03-10"}
+{"_id": {"$oid": "69785ef7eba2370098b8dda3"}, "0": {"name": "powerpoint", "cat": "office", "sales": 1750, "date": "2019-08-22"}}
+{"_id": {"$oid": "698193e6688059db4a7cfeb4"}, "name": "C Programming", "cat": "program", "sales": 1500, "date": "2020-02-15"}

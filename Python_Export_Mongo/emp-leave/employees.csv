@@ -1,0 +1,12 @@
+_id,address,createdAt,departmentId,email,firstName,lastName,phone,position,salary,updatedAt,userId
+69c84506c64092772f1fe1f2,,2026-03-28 21:15:50.464000,69b2f6b52983685f18893a80,pap.dx@examplec.om,Pap,DX,48548451545,Senior HR,15200,,69c84506c64092772f1fe1f1
+69c92d8d276895ddbb195917,,2026-03-29 13:47:57.820000,696a6fb90b6849bd411eedc0,Tanakit.ki@exam.com,Tanakit,Kittipat,0987854587,Junior IT Printer Manager,19800,,69c92d8d276895ddbb195916
+69c933c85b6a4f39f72318e4,,2026-03-29 14:14:32.271000,6984aaa27849100ffea2fc76,summer.win@exam.com,Summer,Winter,0988574587,Senior HR,30000,2026-03-30 02:16:44.355000,69c933c85b6a4f39f72318e3
+69c934435b6a4f39f72318f0,,2026-03-29 14:16:35.566000,6984aaa97849100ffea2fc77,Tanachart.dd@gmail.com,Tanachart,Disatum,0547874514,Head of Manager,69870,,69c934435b6a4f39f72318ef
+69c9480089315d51bac071d8,,2026-03-29 15:40:48.868000,696a6fb90b6849bd411eedc0,Tanakit.sir@exam.com,Tanakit,Siriteerapun,0254787454,Junior Programer,25000,,69c947fe89315d51bac071d7
+69c993e94f15ddb1a957eccc,,2026-03-29 21:04:41.584000,6984aaa27849100ffea2fc76,sick.leave@exam.com,Sick,Leave,0988254578,Senior Professional Account,12500,,69c993e94f15ddb1a957eccb
+69c996854f15ddb1a957ecd5,,2026-03-29 21:15:49.600000,6984aaa27849100ffea2fc76,sick.manager@exmal.com,Sick,Manager,0988574587,Junior Manager,52000,,69c996854f15ddb1a957ecd4
+69c997d34f15ddb1a957ecde,,2026-03-29 21:21:23.399000,696a6fb90b6849bd411eedc0,unpaid.leave@exam.com,Unpaid,Leave,0988574878,Junior IT Printer Manager,12000,,69c997d34f15ddb1a957ecdd
+69c997f94f15ddb1a957ece5,,2026-03-29 21:22:01.093000,696a6fb90b6849bd411eedc0,unpard.loeave@exam.com,Unpard,Leave,0988547878,Senior IT Printer Manager,54000,,69c997f94f15ddb1a957ece4
+69c99e6f4f15ddb1a957ecf8,,2026-03-29 21:49:35.297000,6984aa927849100ffea2fc75,ordi.dk@eaxm.com,Ordination,Leave,0547845478,Junior Suppot,12540,,69c99e6f4f15ddb1a957ecf7
+69c99e914f15ddb1a957ecff,,2026-03-29 21:50:09.782000,6984aa927849100ffea2fc75,ordi.dsk@eaxm.com,Ordination,Leaves,0547845474,Profession Support,125400,,69c99e914f15ddb1a957ecfe

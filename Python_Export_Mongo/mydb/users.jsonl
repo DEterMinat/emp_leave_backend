@@ -1,0 +1,5 @@
+{"_id": {"$oid": "692e935812d5153ec69b09ca"}, "name": "nat", "age": 18, "filed": "develope", "telephone": "0955487654"}
+{"_id": {"$oid": "692e964412d5153ec69b09cb"}, "name": "nate", "age": 32, "major": "S19"}
+{"_id": {"$oid": "692e964412d5153ec69b09cc"}, "name": "namjai", "age": 18, "phone": "0889997458", "major": "S19"}
+{"_id": {"$oid": "692e97f912d5153ec69b09cd"}, "name": "minny", "age": 18, "email": "nongming@gmail.com", "social": ["facebook", "Line", "x"], "major": "S19"}
+{"_id": {"$oid": "692e9a0012d5153ec69b09ce"}, "name": "jane", "age": 21, "email": "janeee@gmail.com", "general": {"weight": 45, "height": 156, "gender": "female"}, "telephone": "0988457895", "major": "S19"}

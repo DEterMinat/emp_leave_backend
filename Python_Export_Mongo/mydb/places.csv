@@ -1,0 +1,4 @@
+_id,category,location.coordinates,location.type,name
+69819b1ffc25998d0df93f16,shop,"[100.5820991, 13.7209218]",Point,B2S
+69819be3fc25998d0df93f17,personal,"[100.5469319, 13.7925975]",Point,sira
+69819c58fc25998d0df93f18,shop,"[100.5973672, 13.7047682]",Point,se-ed

@@ -1,0 +1,9 @@
+{"_id": {"$oid": "69819f43dd777034e27c118e"}, "subject": "basic web", "teacher": "piya"}
+{"_id": {"$oid": "69819f43dd777034e27c118f"}, "subject": "web programming", "teacher": "sira"}
+{"_id": {"$oid": "69819f43dd777034e27c1190"}, "subject": "web design", "teacher": "sira"}
+{"_id": {"$oid": "69819f43dd777034e27c1191"}, "subject": "program development", "teacher": "piya"}
+{"_id": {"$oid": "69819f43dd777034e27c1192"}, "subject": "web master", "teacher": "mana"}
+{"_id": {"$oid": "69819f43dd777034e27c1193"}, "subject": "ms sql server", "teacher": "mana"}
+{"_id": {"$oid": "69819f43dd777034e27c1194"}, "subject": "nosql", "teacher": "manee"}
+{"_id": {"$oid": "69819f43dd777034e27c1195"}, "subject": "\u0e20\u0e32\u0e29\u0e32C", "teacher": "piya"}
+{"_id": {"$oid": "69819f43dd777034e27c1196"}, "subject": "\u0e20\u0e32\u0e29\u0e32SQL", "teacher": "siriya"}

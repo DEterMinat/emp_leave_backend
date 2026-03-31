@@ -1,0 +1,5 @@
+{"_id": {"$oid": "69785f66eba2370098b8dda6"}, "name": "word", "stock": 500, "damage": 13}
+{"_id": {"$oid": "69785f66eba2370098b8dda7"}, "name": "excel", "stock": 250, "damage": 25}
+{"_id": {"$oid": "69785f66eba2370098b8dda8"}, "name": "powerpoint", "stock": 635, "damage": 35}
+{"_id": {"$oid": "69785f66eba2370098b8dda9"}, "name": "outlook", "stock": 567, "damage": 23}
+{"_id": {"$oid": "69785f66eba2370098b8ddaa"}, "name": "access", "stock": 502, "damage": 45}

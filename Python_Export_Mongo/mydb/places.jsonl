@@ -1,0 +1,3 @@
+{"_id": {"$oid": "69819b1ffc25998d0df93f16"}, "name": "B2S", "location": {"type": "Point", "coordinates": [100.5820991, 13.7209218]}, "category": "shop"}
+{"_id": {"$oid": "69819be3fc25998d0df93f17"}, "name": "sira", "location": {"type": "Point", "coordinates": [100.5469319, 13.7925975]}, "category": "personal"}
+{"_id": {"$oid": "69819c58fc25998d0df93f18"}, "name": "se-ed", "location": {"type": "Point", "coordinates": [100.5973672, 13.7047682]}, "category": "shop"}

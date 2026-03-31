@@ -1,0 +1,72 @@
+{
+  "databases": [
+    {
+      "db": "emp-leave",
+      "collections": [
+        {
+          "name": "leaveRequests",
+          "jsonl": 13,
+          "csv": 13
+        },
+        {
+          "name": "activityLogs",
+          "jsonl": 98,
+          "csv": 98
+        },
+        {
+          "name": "employees",
+          "jsonl": 11,
+          "csv": 11
+        },
+        {
+          "name": "users",
+          "jsonl": 11,
+          "csv": 11
+        },
+        {
+          "name": "leaveTypes",
+          "jsonl": 5,
+          "csv": 5
+        },
+        {
+          "name": "departments",
+          "jsonl": 5,
+          "csv": 5
+        },
+        {
+          "name": "leaveBalances",
+          "jsonl": 80,
+          "csv": 80
+        },
+        {
+          "name": "leaveAttachments",
+          "jsonl": 9,
+          "csv": 9
+        },
+        {
+          "name": "userNotifications",
+          "jsonl": 31,
+          "csv": 31
+        },
+        {
+          "name": "roles",
+          "jsonl": 4,
+          "csv": 4
+        },
+        {
+          "name": "attendances",
+          "jsonl": 28,
+          "csv": 28
+        }
+      ]
+    },
+    {
+      "db": "admin",
+      "collections": []
+    },
+    {
+      "db": "local",
+      "collections": []
+    }
+  ]
+}
